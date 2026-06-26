@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RSVPs — Internal</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #222; min-height: 100vh; }
+
+  /* --- Auth gate --- */
+  #gate {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+  }
+  .gate-box {
+    background: #fff; border-radius: 12px; padding: 2.5rem 2rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,.1); width: 100%; max-width: 360px;
+    text-align: center;
+  }
+  .gate-box h1 { font-size: 1.25rem; margin-bottom: 1.5rem; color: #444; }
+  .gate-box input {
+    width: 100%; padding: .75rem 1rem; border: 1px solid #ddd;
+    border-radius: 8px; font-size: 1rem; margin-bottom: 1rem; outline: none;
+  }
+  .gate-box input:focus { border-color: #888; }
+  .gate-box button {
+    width: 100%; padding: .75rem; background: #23150a; color: #fff;
+    border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;
+  }
+  .gate-box button:hover { background: #3a2318; }
+  .gate-error { color: #c00; font-size: .875rem; margin-top: .5rem; }
+
+  /* --- Main dashboard --- */
+  #dashboard { display: none; padding: 2rem; max-width: 1100px; margin: 0 auto; }
+  h1.title { font-size: 1.5rem; font-weight: 600; margin-bottom: 1.75rem; color: #23150a; }
+
+  /* Stats */
+  .stats { display: flex; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
+  .stat {
+    background: #fff; border-radius: 10px; padding: 1.1rem 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07); flex: 1; min-width: 140px;
+  }
+  .stat-val { font-size: 2rem; font-weight: 700; color: #23150a; }
+  .stat-label { font-size: .8rem; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-top: .2rem; }
+
+  /* Filters */
+  .filters {
+    background: #fff; border-radius: 10px; padding: 1.1rem 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-bottom: 1.25rem;
+    display: flex; gap: .75rem; flex-wrap: wrap; align-items: center;
+  }
+  .filters input, .filters select {
+    padding: .5rem .85rem; border: 1px solid #ddd; border-radius: 7px;
+    font-size: .9rem; outline: none; background: #fafafa;
+  }
+  .filters input:focus, .filters select:focus { border-color: #888; }
+  .filters input { flex: 1; min-width: 180px; }
+  .filters label { font-size: .8rem; color: #888; white-space: nowrap; }
+  .filter-group { display: flex; flex-direction: column; gap: .25rem; }
+
+  /* Table */
+  .table-wrap {
+    background: #fff; border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: auto;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  thead th {
+    text-align: left; padding: .85rem 1rem; font-size: .75rem;
+    text-transform: uppercase; letter-spacing: .07em; color: #888;
+    border-bottom: 1px solid #eee; white-space: nowrap; background: #fafafa;
+  }
+  tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafafa; }
+  tbody td { padding: .8rem 1rem; }
+  .badge {
+    display: inline-block; padding: .2rem .55rem; border-radius: 5px;
+    font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .badge-both    { background: #e8f4e8; color: #2a6b2a; }
+  .badge-hyd     { background: #fff3e0; color: #a35c00; }
+  .badge-chennai { background: #e8eeff; color: #2a3fbf; }
+  .badge-full    { background: #f3e8ff; color: #6a2abf; }
+
+  .empty { padding: 3rem; text-align: center; color: #aaa; }
+  .loading-row td { text-align: center; color: #aaa; padding: 3rem; }
+
+  .refresh-btn {
+    margin-left: auto; padding: .5rem 1rem; background: #23150a; color: #fff;
+    border: none; border-radius: 7px; font-size: .85rem; cursor: pointer;
+  }
+  .refresh-btn:hover { background: #3a2318; }
+  .count-label { font-size: .85rem; color: #888; align-self: center; }
+</style>
+</head>
+<body>
+
+<!-- Auth gate -->
+<div id="gate">
+  <div class="gate-box">
+    <h1>RSVP Dashboard</h1>
+    <input type="password" id="pwInput" placeholder="Password" autocomplete="current-password">
+    <button id="pwBtn">Enter</button>
+    <p class="gate-error" id="pwErr"></p>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <h1 class="title">Rithvik &amp; Shivani — RSVPs</h1>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="statTotal">—</div><div class="stat-label">Responses</div></div>
+    <div class="stat"><div class="stat-val" id="statGuests">—</div><div class="stat-label">Total Guests</div></div>
+    <div class="stat"><div class="stat-val" id="statHyd">—</div><div class="stat-label">Hyderabad</div></div>
+    <div class="stat"><div class="stat-val" id="statChe">—</div><div class="stat-label">Chennai</div></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label for="searchInput">Search name</label>
+      <input type="text" id="searchInput" placeholder="Type a name…">
+    </div>
+    <div class="filter-group">
+      <label for="filterEvents">Events</label>
+      <select id="filterEvents">
+        <option value="">All events</option>
+        <option value="both">Both</option>
+        <option value="hyderabad">Hyderabad</option>
+        <option value="chennai">Chennai</option>
+      </select>
+    </div>
+
+    <span class="count-label" id="countLabel"></span>
+    <button class="refresh-btn" id="refreshBtn">Refresh</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Guests</th>
+          <th>Events</th>
+          <th>Invite Type</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr class="loading-row"><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL     = 'https://hzfqvmgwetcszealrfok.supabase.co';
+// Paste your service_role key here (Supabase dashboard → Settings → API → service_role)
+const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6ZnF2bWd3ZXRjc3plYWxyZm9rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjQzNzQxNywiZXhwIjoyMDk4MDEzNDE3fQ.Yai7ltVNO7PuiaIuE06a2Pdnr8vGya7pbFmoNcy5UKk';
+const PASSWORD         = 'rithvikshivani2026';
+
+let allRows = [];
+
+// --- Auth ---
+const gate      = document.getElementById('gate');
+const dashboard = document.getElementById('dashboard');
+const pwInput   = document.getElementById('pwInput');
+const pwErr     = document.getElementById('pwErr');
+
+function tryLogin() {
+  if (pwInput.value === PASSWORD) {
+    gate.style.display = 'none';
+    dashboard.style.display = 'block';
+    loadRSVPs();
+  } else {
+    pwErr.textContent = 'Incorrect password.';
+    pwInput.value = '';
+    pwInput.focus();
+  }
+}
+document.getElementById('pwBtn').onclick = tryLogin;
+pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+// --- Data ---
+async function loadRSVPs() {
+  setTbody('<tr class="loading-row"><td colspan="6">Loading…</td></tr>');
+  try {
+    const res = await fetch(
+      SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc',
+      { headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY } }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    allRows = await res.json();
+    renderStats(allRows);
+    applyFilters();
+  } catch(e) {
+    setTbody(`<tr class="loading-row"><td colspan="6">Error: ${e.message}</td></tr>`);
+  }
+}
+document.getElementById('refreshBtn').onclick = loadRSVPs;
+
+// --- Stats ---
+function renderStats(rows) {
+  const guests = rows.reduce((s, r) => s + (+r.guests || 0), 0);
+  const hyd = rows.filter(r => r.events === 'hyderabad' || r.events === 'both').length;
+  const che = rows.filter(r => r.events === 'chennai'   || r.events === 'both').length;
+  document.getElementById('statTotal').textContent  = rows.length;
+  document.getElementById('statGuests').textContent = guests;
+  document.getElementById('statHyd').textContent    = hyd;
+  document.getElementById('statChe').textContent    = che;
+}
+
+// --- Filters ---
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const evFilt = document.getElementById('filterEvents').value;
+  const filtered = allRows.filter(r => {
+    if (search && !r.name?.toLowerCase().includes(search)) return false;
+    if (evFilt && r.events !== evFilt) return false;
+    return true;
+  });
+
+  document.getElementById('countLabel').textContent =
+    filtered.length === allRows.length
+      ? `${allRows.length} responses`
+      : `${filtered.length} of ${allRows.length}`;
+
+  if (!filtered.length) {
+    setTbody('<tr><td colspan="6" class="empty">No matching responses.</td></tr>');
+    return;
+  }
+
+  const rows = filtered.map((r, i) => {
+    const date = r.created_at
+      ? new Date(r.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : '—';
+    const evBadge = evBadgeHtml(r.events);
+    const tyBadge = typeBadgeHtml(r.type);
+    return `<tr>
+      <td style="color:#aaa">${i + 1}</td>
+      <td><strong>${esc(r.name)}</strong></td>
+      <td>${r.guests ?? '—'}</td>
+      <td>${evBadge}</td>
+      <td>${tyBadge}</td>
+      <td style="color:#888;font-size:.82rem">${date}</td>
+    </tr>`;
+  }).join('');
+  setTbody(rows);
+}
+
+['searchInput','filterEvents'].forEach(id =>
+  document.getElementById(id).addEventListener('input', applyFilters)
+);
+
+function evBadgeHtml(ev) {
+  const map = { both: ['badge-both','Both'], hyderabad: ['badge-hyd','Hyderabad'], chennai: ['badge-chennai','Chennai'] };
+  const [cls, label] = map[ev] || ['', ev || '—'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function typeBadgeHtml(t) {
+  const map = {
+    wedding_full:    ['badge-full',    'Full'],
+    wedding_hyd:     ['badge-hyd',     'Hyderabad Only'],
+    wedding_chennai: ['badge-chennai', 'Chennai Only'],
+  };
+  const [cls, label] = map[t] || ['', t || '—'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function setTbody(html) { document.getElementById('tbody').innerHTML = html; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>
