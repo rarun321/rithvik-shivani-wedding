@@ -93,6 +93,10 @@ nav.scrolled{background:rgba(253,252,248,.92);backdrop-filter:blur(10px);
   cursor:pointer;transition:transform .2s,box-shadow .25s,background .2s;box-shadow:0 14px 30px -14px rgba(232,137,12,.7)}
 .submit:hover{background:#F49C1E;transform:translateY(-2px)}
 .submit:active{transform:translateY(0)}
+.submit:disabled{opacity:.7;cursor:not-allowed;transform:none}
+.submit .spinner{display:none;width:1em;height:1em;border:2px solid rgba(35,21,10,.3);border-top-color:#23150a;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.45em}
+.submit.loading .spinner{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
 .err{color:#F6C065;font-family:"Jost",sans-serif;font-size:.78rem;margin-top:.4rem;min-height:1em}
 .thanks{max-width:460px;margin:0 auto;text-align:center;animation:pop .6s ease}
 @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
@@ -144,7 +148,6 @@ footer .fb .amp{font-family:"Tangerine",cursive;font-size:2rem;vertical-align:-.
 
 <section class="rsvp" id="rsvp">
   <div class="wrap">
-    <p class="eyebrow">Kindly Respond</p>
     <h2>Will you join us?</h2>
     <p class="sub">We&rsquo;d be honoured to celebrate with you.</p>
     <p class="deadline">Please reply by August 10, 2026</p>
@@ -163,6 +166,14 @@ footer .fb .amp{font-family:"Tangerine",cursive;font-size:2rem;vertical-align:-.
         <p class="help">Including yourself.</p>
       </div>
       <div class="field">
+        <label>Events attending</label>
+        <div class="seg" role="group" aria-label="Events attending">
+          <button type="button" id="evHyd" aria-pressed="false">Hyderabad</button>
+          <button type="button" id="evChe" aria-pressed="false">Chennai</button>
+          <button type="button" id="evBoth" aria-pressed="true">Both</button>
+        </div>
+      </div>
+      <div class="field">
         <label>Accommodation needed</label>
         <div class="seg" role="group" aria-label="Accommodation needed">
           <button type="button" id="accYes" aria-pressed="false">Yes, please</button>
@@ -170,13 +181,12 @@ footer .fb .amp{font-family:"Tangerine",cursive;font-size:2rem;vertical-align:-.
         </div>
         <p class="help">We&rsquo;ve held rooms near the venue for guests travelling in.</p>
       </div>
-      <button type="submit" class="submit">Send our RSVP</button>
+      <button type="submit" class="submit"><span class="spinner"></span><span class="btn-label">Send our RSVP</span></button>
       <p class="err" id="err" role="alert"></p>
     </form>
     <div class="thanks" id="thanks" hidden>
       <div class="check">With joy &mdash; thank you!</div>
       <p id="thanksMsg"></p>
-      <button type="button" class="again" id="again">Submit another response</button>
     </div>
     <div id="adminBody" hidden></div>
   </div>
@@ -214,6 +224,13 @@ function renderAcc(){accYes.setAttribute('aria-pressed',acc);accNo.setAttribute(
 accYes.onclick=()=>{acc=true;renderAcc();};
 accNo.onclick=()=>{acc=false;renderAcc();};
 
+let events='both';
+const evHyd=document.getElementById('evHyd'),evChe=document.getElementById('evChe'),evBoth=document.getElementById('evBoth');
+function renderEv(){evHyd.setAttribute('aria-pressed',events==='hyderabad');evChe.setAttribute('aria-pressed',events==='chennai');evBoth.setAttribute('aria-pressed',events==='both');}
+evHyd.onclick=()=>{events='hyderabad';renderEv();};
+evChe.onclick=()=>{events='chennai';renderEv();};
+evBoth.onclick=()=>{events='both';renderEv();};
+
 /* ===== RSVP backend (Supabase) =============================================
    Fill in these two values from your Supabase project:
      Supabase dashboard  ->  Project Settings  ->  API
@@ -224,15 +241,15 @@ accNo.onclick=()=>{acc=false;renderAcc();};
    submit, but nobody can read the guest list from the page. You and Shivani
    view responses in the Supabase dashboard (Table editor -> rsvps).
 ============================================================================ */
-const SUPABASE_URL='https://YOUR-PROJECT.supabase.co';
-const SUPABASE_ANON_KEY='YOUR-ANON-PUBLIC-KEY';
+const SUPABASE_URL='https://hzfqvmgwetcszealrfok.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_LctcNn18hW_3fSSuNHh4CQ_60ZFIS62';
 const USE_SUPABASE=!SUPABASE_URL.includes('YOUR-PROJECT')&&!SUPABASE_ANON_KEY.includes('YOUR-ANON');
 
 async function sendToBackend(record){
   const res=await fetch(SUPABASE_URL+'/rest/v1/rsvps',{method:'POST',
     headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,
       'Content-Type':'application/json','Prefer':'return=minimal'},
-    body:JSON.stringify({name:record.name,guests:record.guests,accommodation:record.accommodation})});
+    body:JSON.stringify({name:record.name,guests:record.guests,accommodation:record.accommodation,events:record.events,type:record.type})});
   if(!res.ok)throw new Error('Supabase insert failed: '+res.status+' '+(await res.text()));
 }
 
@@ -250,14 +267,14 @@ form.addEventListener('submit',async ev=>{
   const name=nameEl.value.trim();
   if(!name){err.textContent='Please add your name so we know who to expect.';nameEl.focus();return;}
   err.textContent='';
-  const record={name,guests,accommodation:acc,when:new Date().toISOString()};
+  const record={name,guests,accommodation:acc,events,type:'wedding_full',when:new Date().toISOString()};
   const submitBtn=form.querySelector('.submit');
-  submitBtn.disabled=true;submitBtn.textContent='Sending\u2026';
+  submitBtn.disabled=true;submitBtn.classList.add('loading');submitBtn.querySelector('.btn-label').textContent='Sending\u2026';
   try{
     if(USE_SUPABASE){await sendToBackend(record);}
     else{const list=await loadRSVPs();list.push(record);await saveRSVPs(list);}
   }catch(e){
-    submitBtn.disabled=false;submitBtn.textContent='Send our RSVP';
+    submitBtn.disabled=false;submitBtn.classList.remove('loading');submitBtn.querySelector('.btn-label').textContent='Send our RSVP';
     err.textContent='Sorry \u2014 that didn\u2019t send. Please check your connection and try again.';
     return;
   }
@@ -269,10 +286,6 @@ form.addEventListener('submit',async ev=>{
   if(!USE_SUPABASE){renderAdmin(await loadRSVPs());}
   thanks.scrollIntoView({behavior:'smooth',block:'center'});
 });
-document.getElementById('again').onclick=()=>{
-  form.reset();guests=1;acc=false;renderG();renderAcc();
-  thanks.hidden=true;form.hidden=false;nameEl.focus();
-};
 function renderAdmin(list){
   const body=document.getElementById('adminBody');
   if(!list||!list.length){body.innerHTML='<p class="empty">No responses yet.</p>';return;}
