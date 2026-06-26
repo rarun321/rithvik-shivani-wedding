@@ -238,7 +238,7 @@ form.addEventListener('submit',async ev=>{
   const name=nameEl.value.trim();
   if(!name){err.textContent='Please add your name so we know who to expect.';nameEl.focus();return;}
   err.textContent='';
-  const record={name,guests,events,type:'wedding_full',when:new Date().toISOString()};
+  const record={name,guests,events,type:'wedding_chennai',when:new Date().toISOString()};
   const submitBtn=form.querySelector('.submit');
   submitBtn.disabled=true;submitBtn.classList.add('loading');submitBtn.querySelector('.btn-label').textContent='Sending\u2026';
   try{
