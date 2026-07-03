@@ -207,8 +207,8 @@ document.getElementById('refreshBtn').onclick = loadRSVPs;
 // --- Stats ---
 function renderStats(rows) {
   const guests = rows.reduce((s, r) => s + (+r.guests || 0), 0);
-  const hyd = rows.filter(r => r.events === 'hyderabad' || r.events === 'both').length;
-  const che = rows.filter(r => r.events === 'chennai'   || r.events === 'both').length;
+  const hyd = rows.filter(r => r.events === 'hyderabad' || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
+  const che = rows.filter(r => r.events === 'chennai'   || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
   document.getElementById('statTotal').textContent  = rows.length;
   document.getElementById('statGuests').textContent = guests;
   document.getElementById('statHyd').textContent    = hyd;
