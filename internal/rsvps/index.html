@@ -92,6 +92,13 @@
   }
   .refresh-btn:hover { background: #3a2318; }
   .count-label { font-size: .85rem; color: #888; align-self: center; }
+
+  .del-btn {
+    padding: .3rem .7rem; font-size: .78rem; border: 1px solid #e0b0b0;
+    background: #fff5f5; color: #c00; border-radius: 6px; cursor: pointer;
+  }
+  .del-btn:hover { background: #fde8e8; }
+  .del-btn:disabled { opacity: .5; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -149,10 +156,11 @@
           <th>Events</th>
           <th>Invite Type</th>
           <th>Submitted</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="loading-row"><td colspan="6">Loading…</td></tr>
+        <tr class="loading-row"><td colspan="7">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -241,13 +249,14 @@ function applyFilters() {
       : '—';
     const evBadge = evBadgeHtml(r.events);
     const tyBadge = typeBadgeHtml(r.type);
-    return `<tr>
+    return `<tr data-id="${r.id}">
       <td style="color:#aaa">${i + 1}</td>
       <td><strong>${esc(r.name)}</strong></td>
       <td>${r.guests ?? '—'}</td>
       <td>${evBadge}</td>
       <td>${tyBadge}</td>
       <td style="color:#888;font-size:.82rem">${date}</td>
+      <td><button class="del-btn" onclick="deleteRow(${r.id}, this)">Delete</button></td>
     </tr>`;
   }).join('');
   setTbody(rows);
@@ -272,6 +281,26 @@ function typeBadgeHtml(t) {
   return `<span class="badge ${cls}">${label}</span>`;
 }
 function setTbody(html) { document.getElementById('tbody').innerHTML = html; }
+
+async function deleteRow(id, btn) {
+  if (!confirm('Delete this RSVP?')) return;
+  btn.disabled = true;
+  btn.textContent = '…';
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rsvps?id=eq.' + id, {
+      method: 'DELETE',
+      headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    allRows = allRows.filter(r => r.id !== id);
+    renderStats(allRows);
+    applyFilters();
+  } catch(e) {
+    alert('Delete failed: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Delete';
+  }
+}
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>
