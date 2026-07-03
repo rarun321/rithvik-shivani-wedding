@@ -99,6 +99,25 @@
   }
   .del-btn:hover { background: #fde8e8; }
   .del-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .guests-cell { display: flex; align-items: center; gap: .4rem; }
+  .guests-val { cursor: pointer; border-bottom: 1px dashed #bbb; }
+  .guests-val:hover { border-bottom-color: #555; }
+  .guests-input {
+    width: 52px; padding: .2rem .4rem; border: 1px solid #bbb;
+    border-radius: 5px; font-size: .9rem; text-align: center;
+  }
+  .save-btn {
+    padding: .2rem .55rem; font-size: .78rem; background: #23150a; color: #fff;
+    border: none; border-radius: 5px; cursor: pointer;
+  }
+  .save-btn:hover { background: #3a2318; }
+  .save-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .cancel-btn {
+    padding: .2rem .5rem; font-size: .78rem; background: none;
+    border: 1px solid #ccc; border-radius: 5px; cursor: pointer; color: #666;
+  }
+  .cancel-btn:hover { border-color: #888; }
 </style>
 </head>
 <body>
@@ -252,7 +271,7 @@ function applyFilters() {
     return `<tr data-id="${r.id}">
       <td style="color:#aaa">${i + 1}</td>
       <td><strong>${esc(r.name)}</strong></td>
-      <td>${r.guests ?? '—'}</td>
+      <td><div class="guests-cell" id="gc-${r.id}"><span class="guests-val" onclick="editGuests(${r.id})">${r.guests ?? '—'}</span></div></td>
       <td>${evBadge}</td>
       <td>${tyBadge}</td>
       <td style="color:#888;font-size:.82rem">${date}</td>
@@ -281,6 +300,47 @@ function typeBadgeHtml(t) {
   return `<span class="badge ${cls}">${label}</span>`;
 }
 function setTbody(html) { document.getElementById('tbody').innerHTML = html; }
+
+function editGuests(id) {
+  const row = allRows.find(r => r.id === id);
+  const cell = document.getElementById('gc-' + id);
+  cell.innerHTML = `
+    <input class="guests-input" id="gi-${id}" type="number" min="1" value="${row.guests}">
+    <button class="save-btn" onclick="saveGuests(${id})">Save</button>
+    <button class="cancel-btn" onclick="cancelGuests(${id})">Cancel</button>`;
+  document.getElementById('gi-' + id).focus();
+}
+
+function cancelGuests(id) {
+  const row = allRows.find(r => r.id === id);
+  document.getElementById('gc-' + id).innerHTML =
+    `<span class="guests-val" onclick="editGuests(${id})">${row.guests}</span>`;
+}
+
+async function saveGuests(id) {
+  const input = document.getElementById('gi-' + id);
+  const val = parseInt(input.value);
+  if (!val || val < 1) { input.focus(); return; }
+  const saveBtn = input.nextElementSibling;
+  saveBtn.disabled = true;
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rsvps?id=eq.' + id, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ guests: val })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    allRows = allRows.map(r => r.id === id ? { ...r, guests: val } : r);
+    renderStats(allRows);
+    cancelGuests(id);
+  } catch(e) {
+    alert('Update failed: ' + e.message);
+    saveBtn.disabled = false;
+  }
+}
 
 async function deleteRow(id, btn) {
   if (!confirm('Delete this RSVP?')) return;
