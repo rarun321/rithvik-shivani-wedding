@@ -9,14 +9,10 @@
   body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #222; min-height: 100vh; }
 
   /* --- Auth gate --- */
-  #gate {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh;
-  }
+  #gate { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
   .gate-box {
     background: #fff; border-radius: 12px; padding: 2.5rem 2rem;
-    box-shadow: 0 4px 24px rgba(0,0,0,.1); width: 100%; max-width: 360px;
-    text-align: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,.1); width: 100%; max-width: 360px; text-align: center;
   }
   .gate-box h1 { font-size: 1.25rem; margin-bottom: 1.5rem; color: #444; }
   .gate-box input {
@@ -31,8 +27,8 @@
   .gate-box button:hover { background: #3a2318; }
   .gate-error { color: #c00; font-size: .875rem; margin-top: .5rem; }
 
-  /* --- Main dashboard --- */
-  #dashboard { display: none; padding: 2rem; max-width: 1100px; margin: 0 auto; }
+  /* --- Dashboard --- */
+  #dashboard { display: none; padding: 2rem; max-width: 1300px; margin: 0 auto; }
   h1.title { font-size: 1.5rem; font-weight: 600; margin-bottom: 1.75rem; color: #23150a; }
 
   /* Stats */
@@ -48,76 +44,83 @@
   .filters {
     background: #fff; border-radius: 10px; padding: 1.1rem 1.25rem;
     box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-bottom: 1.25rem;
-    display: flex; gap: .75rem; flex-wrap: wrap; align-items: center;
+    display: flex; gap: .75rem; flex-wrap: wrap; align-items: flex-end;
   }
   .filters input, .filters select {
     padding: .5rem .85rem; border: 1px solid #ddd; border-radius: 7px;
     font-size: .9rem; outline: none; background: #fafafa;
   }
   .filters input:focus, .filters select:focus { border-color: #888; }
-  .filters input { flex: 1; min-width: 180px; }
-  .filters label { font-size: .8rem; color: #888; white-space: nowrap; }
   .filter-group { display: flex; flex-direction: column; gap: .25rem; }
+  .filter-group label { font-size: .8rem; color: #888; white-space: nowrap; }
+  .filters input[type="text"] { min-width: 180px; }
+  .count-label { font-size: .85rem; color: #888; padding-bottom: .5rem; }
+  .refresh-btn {
+    padding: .5rem 1rem; background: #23150a; color: #fff;
+    border: none; border-radius: 7px; font-size: .85rem; cursor: pointer; margin-left: auto;
+  }
+  .refresh-btn:hover { background: #3a2318; }
 
   /* Table */
-  .table-wrap {
-    background: #fff; border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: auto;
-  }
-  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .table-wrap { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .875rem; }
   thead th {
-    text-align: left; padding: .85rem 1rem; font-size: .75rem;
+    text-align: left; padding: .85rem 1rem; font-size: .72rem;
     text-transform: uppercase; letter-spacing: .07em; color: #888;
     border-bottom: 1px solid #eee; white-space: nowrap; background: #fafafa;
   }
   tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .1s; }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: #fafafa; }
-  tbody td { padding: .8rem 1rem; }
+  tbody td { padding: .75rem 1rem; vertical-align: middle; }
+
+  /* Badges */
   .badge {
     display: inline-block; padding: .2rem .55rem; border-radius: 5px;
-    font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+    font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
   }
   .badge-both    { background: #e8f4e8; color: #2a6b2a; }
   .badge-hyd     { background: #fff3e0; color: #a35c00; }
   .badge-chennai { background: #e8eeff; color: #2a3fbf; }
   .badge-full    { background: #f3e8ff; color: #6a2abf; }
 
-  .empty { padding: 3rem; text-align: center; color: #aaa; }
-  .loading-row td { text-align: center; color: #aaa; padding: 3rem; }
-
-  .refresh-btn {
-    margin-left: auto; padding: .5rem 1rem; background: #23150a; color: #fff;
-    border: none; border-radius: 7px; font-size: .85rem; cursor: pointer;
+  /* Inline edit shared */
+  .editable-cell { display: flex; align-items: center; gap: .35rem; }
+  .editable-val {
+    cursor: pointer; border-bottom: 1px dashed #bbb; white-space: nowrap;
   }
-  .refresh-btn:hover { background: #3a2318; }
-  .count-label { font-size: .85rem; color: #888; align-self: center; }
-
-  .del-btn {
-    padding: .3rem .7rem; font-size: .78rem; border: 1px solid #e0b0b0;
-    background: #fff5f5; color: #c00; border-radius: 6px; cursor: pointer;
+  .editable-val:hover { border-bottom-color: #555; }
+  .edit-input {
+    padding: .2rem .4rem; border: 1px solid #bbb; border-radius: 5px; font-size: .875rem;
   }
-  .del-btn:hover { background: #fde8e8; }
-  .del-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-  .guests-cell { display: flex; align-items: center; gap: .4rem; }
-  .guests-val { cursor: pointer; border-bottom: 1px dashed #bbb; }
-  .guests-val:hover { border-bottom-color: #555; }
-  .guests-input {
-    width: 52px; padding: .2rem .4rem; border: 1px solid #bbb;
-    border-radius: 5px; font-size: .9rem; text-align: center;
-  }
+  .edit-input[type="number"] { width: 60px; text-align: center; }
+  .edit-input[type="text"]   { width: 150px; }
+  .edit-select { padding: .2rem .4rem; border: 1px solid #bbb; border-radius: 5px; font-size: .875rem; }
   .save-btn {
-    padding: .2rem .55rem; font-size: .78rem; background: #23150a; color: #fff;
-    border: none; border-radius: 5px; cursor: pointer;
+    padding: .2rem .55rem; font-size: .75rem; background: #23150a; color: #fff;
+    border: none; border-radius: 5px; cursor: pointer; white-space: nowrap;
   }
   .save-btn:hover { background: #3a2318; }
   .save-btn:disabled { opacity: .5; cursor: not-allowed; }
   .cancel-btn {
-    padding: .2rem .5rem; font-size: .78rem; background: none;
+    padding: .2rem .5rem; font-size: .75rem; background: none;
     border: 1px solid #ccc; border-radius: 5px; cursor: pointer; color: #666;
   }
   .cancel-btn:hover { border-color: #888; }
+
+  /* Checkbox */
+  .transport-cb { width: 16px; height: 16px; cursor: pointer; accent-color: #23150a; }
+
+  /* Delete */
+  .del-btn {
+    padding: .3rem .7rem; font-size: .75rem; border: 1px solid #e0b0b0;
+    background: #fff5f5; color: #c00; border-radius: 6px; cursor: pointer; white-space: nowrap;
+  }
+  .del-btn:hover { background: #fde8e8; }
+  .del-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .empty { padding: 3rem; text-align: center; color: #aaa; }
+  .loading-row td { text-align: center; color: #aaa; padding: 3rem; }
 </style>
 </head>
 <body>
@@ -159,7 +162,17 @@
         <option value="chennai">Chennai</option>
       </select>
     </div>
-
+    <div class="filter-group">
+      <label for="filterAccom">Accommodation</label>
+      <select id="filterAccom">
+        <option value="">All accommodation</option>
+        <option value="Sheraton">Sheraton</option>
+        <option value="Novotel Chennai">Novotel Chennai</option>
+        <option value="Serene Resort Hyderabad">Serene Resort Hyderabad</option>
+        <option value="Villa Beach Paradise Chennai">Villa Beach Paradise Chennai</option>
+        <option value="none">None</option>
+      </select>
+    </div>
     <span class="count-label" id="countLabel"></span>
     <button class="refresh-btn" id="refreshBtn">Refresh</button>
   </div>
@@ -174,12 +187,15 @@
           <th>Guests</th>
           <th>Events</th>
           <th>Invite Type</th>
+          <th>Accommodation</th>
+          <th># Rooms</th>
+          <th>Transport</th>
           <th>Submitted</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="loading-row"><td colspan="7">Loading…</td></tr>
+        <tr class="loading-row"><td colspan="10">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -187,27 +203,22 @@
 
 <script>
 const SUPABASE_URL     = 'https://hzfqvmgwetcszealrfok.supabase.co';
-// Paste your service_role key here (Supabase dashboard → Settings → API → service_role)
 const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6ZnF2bWd3ZXRjc3plYWxyZm9rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjQzNzQxNywiZXhwIjoyMDk4MDEzNDE3fQ.Yai7ltVNO7PuiaIuE06a2Pdnr8vGya7pbFmoNcy5UKk';
 const PASSWORD         = 'rithvikshivani2026';
+
+const ACCOM_OPTIONS = ['Sheraton','Novotel Chennai','Serene Resort Hyderabad','Villa Beach Paradise Chennai'];
 
 let allRows = [];
 
 // --- Auth ---
-const gate      = document.getElementById('gate');
-const dashboard = document.getElementById('dashboard');
-const pwInput   = document.getElementById('pwInput');
-const pwErr     = document.getElementById('pwErr');
+const gate = document.getElementById('gate'), dashboard = document.getElementById('dashboard');
+const pwInput = document.getElementById('pwInput'), pwErr = document.getElementById('pwErr');
 
 function tryLogin() {
   if (pwInput.value === PASSWORD) {
-    gate.style.display = 'none';
-    dashboard.style.display = 'block';
-    loadRSVPs();
+    gate.style.display = 'none'; dashboard.style.display = 'block'; loadRSVPs();
   } else {
-    pwErr.textContent = 'Incorrect password.';
-    pwInput.value = '';
-    pwInput.focus();
+    pwErr.textContent = 'Incorrect password.'; pwInput.value = ''; pwInput.focus();
   }
 }
 document.getElementById('pwBtn').onclick = tryLogin;
@@ -215,18 +226,17 @@ pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); })
 
 // --- Data ---
 async function loadRSVPs() {
-  setTbody('<tr class="loading-row"><td colspan="6">Loading…</td></tr>');
+  setTbody('<tr class="loading-row"><td colspan="10">Loading…</td></tr>');
   try {
-    const res = await fetch(
-      SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc',
-      { headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY } }
-    );
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
+      headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
+    });
     if (!res.ok) throw new Error(await res.text());
     allRows = await res.json();
     renderStats(allRows);
     applyFilters();
   } catch(e) {
-    setTbody(`<tr class="loading-row"><td colspan="6">Error: ${e.message}</td></tr>`);
+    setTbody(`<tr class="loading-row"><td colspan="10">Error: ${e.message}</td></tr>`);
   }
 }
 document.getElementById('refreshBtn').onclick = loadRSVPs;
@@ -244,108 +254,169 @@ function renderStats(rows) {
 
 // --- Filters ---
 function applyFilters() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  const evFilt = document.getElementById('filterEvents').value;
+  const search    = document.getElementById('searchInput').value.toLowerCase();
+  const evFilt    = document.getElementById('filterEvents').value;
+  const accomFilt = document.getElementById('filterAccom').value;
+
   const filtered = allRows.filter(r => {
     if (search && !r.name?.toLowerCase().includes(search)) return false;
     if (evFilt && r.events !== evFilt) return false;
+    if (accomFilt) {
+      if (accomFilt === 'none' && r.accommodation) return false;
+      if (accomFilt !== 'none' && r.accommodation !== accomFilt) return false;
+    }
     return true;
   });
 
   document.getElementById('countLabel').textContent =
-    filtered.length === allRows.length
-      ? `${allRows.length} responses`
-      : `${filtered.length} of ${allRows.length}`;
+    filtered.length === allRows.length ? `${allRows.length} responses` : `${filtered.length} of ${allRows.length}`;
 
   if (!filtered.length) {
-    setTbody('<tr><td colspan="6" class="empty">No matching responses.</td></tr>');
+    setTbody('<tr><td colspan="10" class="empty">No matching responses.</td></tr>');
     return;
   }
 
-  const rows = filtered.map((r, i) => {
-    const date = r.created_at
-      ? new Date(r.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
-      : '—';
-    const evBadge = evBadgeHtml(r.events);
-    const tyBadge = typeBadgeHtml(r.type);
-    return `<tr data-id="${r.id}">
-      <td style="color:#aaa">${i + 1}</td>
-      <td><strong>${esc(r.name)}</strong></td>
-      <td><div class="guests-cell" id="gc-${r.id}"><span class="guests-val" onclick="editGuests(${r.id})">${r.guests ?? '—'}</span></div></td>
-      <td>${evBadge}</td>
-      <td>${tyBadge}</td>
-      <td style="color:#888;font-size:.82rem">${date}</td>
-      <td><button class="del-btn" onclick="deleteRow(${r.id}, this)">Delete</button></td>
-    </tr>`;
-  }).join('');
-  setTbody(rows);
+  setTbody(filtered.map((r, i) => buildRow(r, i + 1)).join(''));
 }
 
-['searchInput','filterEvents'].forEach(id =>
+['searchInput','filterEvents','filterAccom'].forEach(id =>
   document.getElementById(id).addEventListener('input', applyFilters)
 );
 
-function evBadgeHtml(ev) {
-  const map = { both: ['badge-both','Both'], hyderabad: ['badge-hyd','Hyderabad'], chennai: ['badge-chennai','Chennai'] };
-  const [cls, label] = map[ev] || ['', ev || '—'];
-  return `<span class="badge ${cls}">${label}</span>`;
+function buildRow(r, i) {
+  const date = r.created_at
+    ? new Date(r.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+    : '—';
+  const accomDisplay = r.accommodation || '<span style="color:#bbb">—</span>';
+  const roomsDisplay = r.rooms != null ? r.rooms : '<span style="color:#bbb">—</span>';
+  return `<tr data-id="${r.id}">
+    <td style="color:#aaa">${i}</td>
+    <td><div class="editable-cell" id="nc-${r.id}"><span class="editable-val" onclick="editName(${r.id})">${esc(r.name)}</span></div></td>
+    <td><div class="editable-cell" id="gc-${r.id}"><span class="editable-val" onclick="editGuests(${r.id})">${r.guests ?? '—'}</span></div></td>
+    <td>${evBadgeHtml(r.events)}</td>
+    <td>${typeBadgeHtml(r.type)}</td>
+    <td><div class="editable-cell" id="ac-${r.id}"><span class="editable-val" onclick="editAccom(${r.id})">${accomDisplay}</span></div></td>
+    <td><div class="editable-cell" id="rc-${r.id}"><span class="editable-val" onclick="editRooms(${r.id})">${roomsDisplay}</span></div></td>
+    <td style="text-align:center"><input type="checkbox" class="transport-cb" ${r.transportation ? 'checked' : ''} onchange="saveField(${r.id},'transportation',this.checked)"></td>
+    <td style="color:#888;font-size:.8rem">${date}</td>
+    <td><button class="del-btn" onclick="deleteRow(${r.id},this)">Delete</button></td>
+  </tr>`;
 }
-function typeBadgeHtml(t) {
-  const map = {
-    wedding_full:    ['badge-full',    'Full'],
-    wedding_hyd:     ['badge-hyd',     'Hyderabad Only'],
-    wedding_chennai: ['badge-chennai', 'Chennai Only'],
-  };
-  const [cls, label] = map[t] || ['', t || '—'];
-  return `<span class="badge ${cls}">${label}</span>`;
-}
-function setTbody(html) { document.getElementById('tbody').innerHTML = html; }
 
+// --- Generic patch ---
+async function patchRow(id, fields) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/rsvps?id=eq.' + id, {
+    method: 'PATCH',
+    headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(fields)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  allRows = allRows.map(r => r.id === id ? { ...r, ...fields } : r);
+}
+
+async function saveField(id, field, value) {
+  try { await patchRow(id, { [field]: value }); renderStats(allRows); }
+  catch(e) { alert('Update failed: ' + e.message); }
+}
+
+// --- Edit: Name ---
+function editName(id) {
+  const row = allRows.find(r => r.id === id);
+  const cell = document.getElementById('nc-' + id);
+  cell.innerHTML = `<input class="edit-input" type="text" id="ni-${id}" value="${esc(row.name)}">
+    <button class="save-btn" onclick="saveName(${id})">Save</button>
+    <button class="cancel-btn" onclick="cancelEdit('nc',${id},'name',esc)">Cancel</button>`;
+  document.getElementById('ni-' + id).focus();
+}
+async function saveName(id) {
+  const input = document.getElementById('ni-' + id);
+  const val = input.value.trim();
+  if (!val) { input.focus(); return; }
+  const btn = input.nextElementSibling; btn.disabled = true;
+  try {
+    await patchRow(id, { name: val });
+    document.getElementById('nc-' + id).innerHTML = `<span class="editable-val" onclick="editName(${id})">${esc(val)}</span>`;
+  } catch(e) { alert('Update failed: ' + e.message); btn.disabled = false; }
+}
+function cancelName(id) {
+  const row = allRows.find(r => r.id === id);
+  document.getElementById('nc-' + id).innerHTML = `<span class="editable-val" onclick="editName(${id})">${esc(row.name)}</span>`;
+}
+
+// --- Edit: Guests ---
 function editGuests(id) {
   const row = allRows.find(r => r.id === id);
   const cell = document.getElementById('gc-' + id);
-  cell.innerHTML = `
-    <input class="guests-input" id="gi-${id}" type="number" min="1" value="${row.guests}">
+  cell.innerHTML = `<input class="edit-input" type="number" min="1" id="gi-${id}" value="${row.guests}">
     <button class="save-btn" onclick="saveGuests(${id})">Save</button>
     <button class="cancel-btn" onclick="cancelGuests(${id})">Cancel</button>`;
   document.getElementById('gi-' + id).focus();
 }
-
-function cancelGuests(id) {
-  const row = allRows.find(r => r.id === id);
-  document.getElementById('gc-' + id).innerHTML =
-    `<span class="guests-val" onclick="editGuests(${id})">${row.guests}</span>`;
-}
-
 async function saveGuests(id) {
   const input = document.getElementById('gi-' + id);
   const val = parseInt(input.value);
   if (!val || val < 1) { input.focus(); return; }
-  const saveBtn = input.nextElementSibling;
-  saveBtn.disabled = true;
+  const btn = input.nextElementSibling; btn.disabled = true;
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/rsvps?id=eq.' + id, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ guests: val })
-    });
-    if (!res.ok) throw new Error(await res.text());
-    allRows = allRows.map(r => r.id === id ? { ...r, guests: val } : r);
+    await patchRow(id, { guests: val });
     renderStats(allRows);
-    cancelGuests(id);
-  } catch(e) {
-    alert('Update failed: ' + e.message);
-    saveBtn.disabled = false;
-  }
+    document.getElementById('gc-' + id).innerHTML = `<span class="editable-val" onclick="editGuests(${id})">${val}</span>`;
+  } catch(e) { alert('Update failed: ' + e.message); btn.disabled = false; }
+}
+function cancelGuests(id) {
+  const row = allRows.find(r => r.id === id);
+  document.getElementById('gc-' + id).innerHTML = `<span class="editable-val" onclick="editGuests(${id})">${row.guests}</span>`;
 }
 
+// --- Edit: Accommodation ---
+function editAccom(id) {
+  const row = allRows.find(r => r.id === id);
+  const opts = ACCOM_OPTIONS.map(o => `<option value="${o}" ${row.accommodation === o ? 'selected' : ''}>${o}</option>`).join('');
+  document.getElementById('ac-' + id).innerHTML =
+    `<select class="edit-select" id="ai-${id}"><option value="">— None —</option>${opts}</select>
+     <button class="save-btn" onclick="saveAccom(${id})">Save</button>
+     <button class="cancel-btn" onclick="cancelAccom(${id})">Cancel</button>`;
+}
+async function saveAccom(id) {
+  const val = document.getElementById('ai-' + id).value || null;
+  const btn = document.querySelector(`#ac-${id} .save-btn`); btn.disabled = true;
+  try {
+    await patchRow(id, { accommodation: val });
+    document.getElementById('ac-' + id).innerHTML = `<span class="editable-val" onclick="editAccom(${id})">${val || '<span style="color:#bbb">—</span>'}</span>`;
+  } catch(e) { alert('Update failed: ' + e.message); btn.disabled = false; }
+}
+function cancelAccom(id) {
+  const row = allRows.find(r => r.id === id);
+  document.getElementById('ac-' + id).innerHTML = `<span class="editable-val" onclick="editAccom(${id})">${row.accommodation || '<span style="color:#bbb">—</span>'}</span>`;
+}
+
+// --- Edit: Rooms ---
+function editRooms(id) {
+  const row = allRows.find(r => r.id === id);
+  document.getElementById('rc-' + id).innerHTML =
+    `<input class="edit-input" type="number" min="0" id="ri-${id}" value="${row.rooms ?? ''}">
+     <button class="save-btn" onclick="saveRooms(${id})">Save</button>
+     <button class="cancel-btn" onclick="cancelRooms(${id})">Cancel</button>`;
+  document.getElementById('ri-' + id).focus();
+}
+async function saveRooms(id) {
+  const input = document.getElementById('ri-' + id);
+  const val = input.value === '' ? null : parseInt(input.value);
+  const btn = input.nextElementSibling; btn.disabled = true;
+  try {
+    await patchRow(id, { rooms: val });
+    document.getElementById('rc-' + id).innerHTML = `<span class="editable-val" onclick="editRooms(${id})">${val != null ? val : '<span style="color:#bbb">—</span>'}</span>`;
+  } catch(e) { alert('Update failed: ' + e.message); btn.disabled = false; }
+}
+function cancelRooms(id) {
+  const row = allRows.find(r => r.id === id);
+  document.getElementById('rc-' + id).innerHTML = `<span class="editable-val" onclick="editRooms(${id})">${row.rooms != null ? row.rooms : '<span style="color:#bbb">—</span>'}</span>`;
+}
+
+// --- Delete ---
 async function deleteRow(id, btn) {
   if (!confirm('Delete this RSVP?')) return;
-  btn.disabled = true;
-  btn.textContent = '…';
+  btn.disabled = true; btn.textContent = '…';
   try {
     const res = await fetch(SUPABASE_URL + '/rest/v1/rsvps?id=eq.' + id, {
       method: 'DELETE',
@@ -353,14 +424,22 @@ async function deleteRow(id, btn) {
     });
     if (!res.ok) throw new Error(await res.text());
     allRows = allRows.filter(r => r.id !== id);
-    renderStats(allRows);
-    applyFilters();
-  } catch(e) {
-    alert('Delete failed: ' + e.message);
-    btn.disabled = false;
-    btn.textContent = 'Delete';
-  }
+    renderStats(allRows); applyFilters();
+  } catch(e) { alert('Delete failed: ' + e.message); btn.disabled = false; btn.textContent = 'Delete'; }
 }
+
+// --- Helpers ---
+function evBadgeHtml(ev) {
+  const map = { both: ['badge-both','Both'], hyderabad: ['badge-hyd','Hyderabad'], chennai: ['badge-chennai','Chennai'] };
+  const [cls, label] = map[ev] || ['', ev || '—'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function typeBadgeHtml(t) {
+  const map = { wedding_full: ['badge-full','Full'], wedding_hyd: ['badge-hyd','Hyderabad Only'], wedding_chennai: ['badge-chennai','Chennai Only'] };
+  const [cls, label] = map[t] || ['', t || '—'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function setTbody(html) { document.getElementById('tbody').innerHTML = html; }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>

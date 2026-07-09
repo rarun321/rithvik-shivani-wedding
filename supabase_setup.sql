@@ -5,11 +5,15 @@
 
 -- 1. The table that stores each RSVP.
 create table if not exists public.rsvps (
-  id            bigint generated always as identity primary key,
-  name          text    not null,
-  guests        integer not null default 1,
-  accommodation boolean not null default false,
-  created_at    timestamptz not null default now()
+  id             bigint generated always as identity primary key,
+  name           text        not null,
+  guests         integer     not null default 1,
+  events         text,
+  type           text,
+  accommodation  text,
+  rooms          integer,
+  transportation boolean     not null default false,
+  created_at     timestamptz not null default now()
 );
 
 -- 2. Turn on Row Level Security so the table is private by default.
@@ -28,3 +32,12 @@ create policy "anon can insert rsvp"
 -- Note: you and Shivani read the responses in the dashboard
 -- (Table editor > rsvps), which bypasses RLS. No read policy is added
 -- on purpose, so the public page can never list other guests' replies.
+
+-- ============================================================
+--  Migration — run if the table already exists
+-- ============================================================
+alter table public.rsvps add column if not exists events         text;
+alter table public.rsvps add column if not exists type           text;
+alter table public.rsvps add column if not exists accommodation  text;
+alter table public.rsvps add column if not exists rooms          integer;
+alter table public.rsvps add column if not exists transportation boolean not null default false;
