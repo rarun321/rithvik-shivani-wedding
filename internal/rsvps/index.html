@@ -402,14 +402,13 @@
           <th>Events</th>
           <th>Invite Type</th>
           <th>Accommodation</th>
-          <th># Rooms</th>
           <th>Transport</th>
           <th>Submitted</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="loading-row"><td colspan="10">Loading…</td></tr>
+        <tr class="loading-row"><td colspan="9">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -472,10 +471,6 @@
         <label><input type="checkbox" class="ar-accom" value="Villa Beach Paradise Chennai"> Villa Beach Paradise Chennai</label>
       </div>
     </div>
-    <div class="modal-field">
-      <label># Rooms</label>
-      <input type="number" id="ar-rooms" min="0" placeholder="—">
-    </div>
     <div class="modal-field" style="flex-direction:row;align-items:center;gap:.75rem">
       <label style="text-transform:none;letter-spacing:0;font-size:.9rem;color:#444;cursor:pointer">
         <input type="checkbox" id="ar-transport" style="margin-right:.4rem">Transport needed
@@ -514,7 +509,7 @@ pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); })
 
 // --- Data ---
 async function loadRSVPs() {
-  setTbody('<tr class="loading-row"><td colspan="10">Loading…</td></tr>');
+  setTbody('<tr class="loading-row"><td colspan="9">Loading…</td></tr>');
   try {
     const rsvpRes = await fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
       headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
@@ -524,7 +519,7 @@ async function loadRSVPs() {
     renderStats(allRows);
     applyFilters();
   } catch(e) {
-    setTbody(`<tr class="loading-row"><td colspan="10">Error: ${e.message}</td></tr>`);
+    setTbody(`<tr class="loading-row"><td colspan="9">Error: ${e.message}</td></tr>`);
   }
   // Load rooms separately — don't break RSVP tab if table missing
   try {
@@ -571,7 +566,7 @@ function applyFilters() {
     filtered.length === allRows.length ? `${allRows.length} responses` : `${filtered.length} of ${allRows.length}`;
 
   if (!filtered.length) {
-    setTbody('<tr><td colspan="10" class="empty">No matching responses.</td></tr>');
+    setTbody('<tr><td colspan="9" class="empty">No matching responses.</td></tr>');
     return;
   }
 
@@ -605,7 +600,6 @@ function buildRow(r, i) {
   const accomDisplay = r.accommodation?.length
     ? r.accommodation.map(a => `<span style="background:#f0f0f0;padding:.1rem .4rem;border-radius:4px;font-size:.78rem;white-space:nowrap">${esc(a)}</span>`).join(' ')
     : '<span style="color:#bbb">—</span>';
-  const roomsDisplay = r.rooms != null ? r.rooms : '<span style="color:#bbb">—</span>';
   return `<tr data-id="${r.id}">
     <td style="color:#aaa">${i}</td>
     <td><div class="editable-cell" id="nc-${r.id}"><span class="editable-val" onclick="editName(${r.id})">${esc(r.name)}</span></div></td>
@@ -613,7 +607,6 @@ function buildRow(r, i) {
     <td>${evBadgeHtml(r.events)}</td>
     <td>${typeBadgeHtml(r.type)}</td>
     <td><div class="editable-cell" id="ac-${r.id}"><span class="editable-val" onclick="editAccom(${r.id})">${accomDisplay}</span></div></td>
-    <td><div class="editable-cell" id="rc-${r.id}"><span class="editable-val" onclick="editRooms(${r.id})">${roomsDisplay}</span></div></td>
     <td style="text-align:center"><input type="checkbox" class="transport-cb" ${r.transportation ? 'checked' : ''} onchange="saveField(${r.id},'transportation',this.checked)"></td>
     <td style="color:#888;font-size:.8rem">${date}</td>
     <td><button class="del-btn" onclick="deleteRow(${r.id},this)">Delete</button></td>
@@ -721,28 +714,6 @@ function cancelAccom(id) {
   document.getElementById('ac-' + id).innerHTML = `<span class="editable-val" onclick="editAccom(${id})">${display}</span>`;
 }
 
-// --- Edit: Rooms ---
-function editRooms(id) {
-  const row = allRows.find(r => r.id === id);
-  document.getElementById('rc-' + id).innerHTML =
-    `<input class="edit-input" type="number" min="0" id="ri-${id}" value="${row.rooms ?? ''}">
-     <button class="save-btn" onclick="saveRooms(${id})">Save</button>
-     <button class="cancel-btn" onclick="cancelRooms(${id})">Cancel</button>`;
-  document.getElementById('ri-' + id).focus();
-}
-async function saveRooms(id) {
-  const input = document.getElementById('ri-' + id);
-  const val = input.value === '' ? null : parseInt(input.value);
-  const btn = input.nextElementSibling; btn.disabled = true;
-  try {
-    await patchRow(id, { rooms: val });
-    document.getElementById('rc-' + id).innerHTML = `<span class="editable-val" onclick="editRooms(${id})">${val != null ? val : '<span style="color:#bbb">—</span>'}</span>`;
-  } catch(e) { alert('Update failed: ' + e.message); btn.disabled = false; }
-}
-function cancelRooms(id) {
-  const row = allRows.find(r => r.id === id);
-  document.getElementById('rc-' + id).innerHTML = `<span class="editable-val" onclick="editRooms(${id})">${row.rooms != null ? row.rooms : '<span style="color:#bbb">—</span>'}</span>`;
-}
 
 // --- Delete ---
 async function deleteRow(id, btn) {
@@ -1097,7 +1068,6 @@ function openAddRSVP() {
   document.getElementById('ar-guests').value = '1';
   document.getElementById('ar-events').value = '';
   document.getElementById('ar-type').value = '';
-  document.getElementById('ar-rooms').value = '';
   document.getElementById('ar-transport').checked = false;
   document.querySelectorAll('.ar-accom').forEach(cb => cb.checked = false);
   document.getElementById('ar-submit').disabled = false;
@@ -1118,7 +1088,6 @@ async function submitAddRSVP() {
   const events = document.getElementById('ar-events').value || null;
   const type = document.getElementById('ar-type').value || null;
   const accom = [...document.querySelectorAll('.ar-accom:checked')].map(cb => cb.value);
-  const rooms = document.getElementById('ar-rooms').value !== '' ? parseInt(document.getElementById('ar-rooms').value) : null;
   const transportation = document.getElementById('ar-transport').checked;
 
   const btn = document.getElementById('ar-submit');
@@ -1134,7 +1103,7 @@ async function submitAddRSVP() {
         'Content-Type': 'application/json',
         'Prefer': 'return=representation'
       },
-      body: JSON.stringify({ name, guests, events, type, accommodation: accom.length ? accom : null, rooms, transportation })
+      body: JSON.stringify({ name, guests, events, type, accommodation: accom.length ? accom : null, transportation })
     });
     if (!res.ok) throw new Error(await res.text());
     const [newRow] = await res.json();
@@ -1168,14 +1137,13 @@ function downloadCSV(filename, rows) {
 }
 
 function exportRSVPs() {
-  const header = ['Name','Guests','Events','Invite Type','Accommodation','# Rooms','Transport','Submitted Date'];
+  const header = ['Name','Guests','Events','Invite Type','Accommodation','Transport','Submitted Date'];
   const rows = allRows.map(r => [
     r.name,
     r.guests,
     Array.isArray(r.events) ? r.events.join('; ') : (r.events || ''),
     r.type || '',
     Array.isArray(r.accommodation) ? r.accommodation.join('; ') : (r.accommodation || ''),
-    r.rooms || '',
     r.transportation ? 'Yes' : 'No',
     r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
   ]);
