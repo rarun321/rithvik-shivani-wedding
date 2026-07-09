@@ -373,6 +373,9 @@
 
   <!-- Tab: Accommodation -->
   <div class="tab-panel" id="tab-accommodation">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:.75rem">
+      <button class="refresh-btn" onclick="loadRSVPs().then(renderAccomTab)">Refresh</button>
+    </div>
     <div class="stats" id="accomStats" style="margin-bottom:1.5rem"></div>
     <div class="hotel-tabs-bar" id="hotelTabsBar"></div>
     <div id="hotelTabContent"></div>
