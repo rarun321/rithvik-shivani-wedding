@@ -34,6 +34,19 @@ create policy "anon can insert rsvp"
 -- on purpose, so the public page can never list other guests' replies.
 
 -- ============================================================
+--  Room groupings (internal use — accommodation tab)
+-- ============================================================
+create table if not exists public.room_groups (
+  id         bigint generated always as identity primary key,
+  hotel      text        not null,
+  label      text        not null default 'Room',
+  rsvp_ids   bigint[]    not null default '{}',
+  created_at timestamptz not null default now()
+);
+alter table public.room_groups enable row level security;
+-- Only service_role (internal dashboard) can read/write room_groups — no anon policy.
+
+-- ============================================================
 --  Migration — run if the table already exists
 -- ============================================================
 alter table public.rsvps add column if not exists events         text;

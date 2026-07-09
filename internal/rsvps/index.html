@@ -28,7 +28,7 @@
   .gate-error { color: #c00; font-size: .875rem; margin-top: .5rem; }
 
   /* --- Dashboard --- */
-  #dashboard { display: none; padding: 2rem; max-width: 1300px; margin: 0 auto; }
+  #dashboard { display: none; padding: 2rem; }
   h1.title { font-size: 1.5rem; font-weight: 600; margin-bottom: 1.75rem; color: #23150a; }
 
   /* Stats */
@@ -122,6 +122,115 @@
 
   .empty { padding: 3rem; text-align: center; color: #aaa; }
   .loading-row td { text-align: center; color: #aaa; padding: 3rem; }
+
+  /* --- Tabs --- */
+  .tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e8e8e8; }
+  .tab-btn {
+    padding: .65rem 1.4rem; font-size: .9rem; font-weight: 500; border: none;
+    background: none; cursor: pointer; color: #888; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; transition: color .15s, border-color .15s;
+  }
+  .tab-btn:hover { color: #444; }
+  .tab-btn.active { color: #23150a; border-bottom-color: #23150a; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* --- Accommodation tab --- */
+  .hotel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px,1fr)); gap: 1.25rem; }
+  .hotel-card {
+    background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    overflow: hidden;
+  }
+  .hotel-header {
+    padding: 1rem 1.25rem; background: #23150a; color: #fff;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .hotel-name { font-size: 1rem; font-weight: 600; }
+  .hotel-meta { display: flex; gap: 1.25rem; }
+  .hotel-stat { text-align: center; }
+  .hotel-stat-val { font-size: 1.4rem; font-weight: 700; }
+  .hotel-stat-label { font-size: .7rem; opacity: .75; text-transform: uppercase; letter-spacing: .05em; }
+  .hotel-body { padding: .5rem 0; }
+  .hotel-empty { padding: 1.5rem; text-align: center; color: #bbb; font-size: .875rem; }
+
+  /* Room sections */
+  .room-section { margin: .5rem .75rem; border: 1px solid #eee; border-radius: 9px; overflow: hidden; }
+  .room-header {
+    display: flex; align-items: center; gap: .5rem; padding: .55rem .85rem;
+    background: #f9f6f3; border-bottom: 1px solid #eee;
+  }
+  .room-label-val {
+    flex: 1; font-weight: 600; font-size: .875rem; color: #23150a;
+    cursor: pointer; border-bottom: 1px dashed transparent;
+  }
+  .room-label-val:hover { border-bottom-color: #bbb; }
+  .room-label-input {
+    flex: 1; padding: .2rem .4rem; border: 1px solid #bbb;
+    border-radius: 5px; font-size: .875rem; font-weight: 600;
+  }
+  .room-del-btn {
+    padding: .2rem .55rem; font-size: .72rem; border: 1px solid #e0b0b0;
+    background: #fff5f5; color: #c00; border-radius: 5px; cursor: pointer;
+  }
+  .room-del-btn:hover { background: #fde8e8; }
+  .room-guests-list { padding: .25rem 0; }
+  .room-guest-row {
+    display: flex; align-items: center; gap: .5rem; padding: .45rem .85rem;
+    border-bottom: 1px solid #f5f5f5; font-size: .85rem;
+  }
+  .room-guest-row:last-child { border-bottom: none; }
+  .room-guest-name { flex: 1; }
+  .room-guest-detail { color: #888; font-size: .78rem; white-space: nowrap; }
+  .remove-from-room {
+    padding: .15rem .45rem; font-size: .72rem; border: 1px solid #ddd;
+    background: #fafafa; border-radius: 4px; cursor: pointer; color: #888;
+    line-height: 1;
+  }
+  .remove-from-room:hover { border-color: #c00; color: #c00; background: #fff5f5; }
+
+  /* Add Room button */
+  .add-room-row { padding: .6rem .85rem; }
+  .add-room-btn {
+    font-size: .82rem; padding: .3rem .75rem; border: 1px dashed #bbb;
+    border-radius: 6px; background: none; cursor: pointer; color: #666;
+    width: 100%;
+  }
+  .add-room-btn:hover { border-color: #23150a; color: #23150a; background: #fdf9f7; }
+
+  /* Unassigned-at-hotel section */
+  .hotel-unassigned { border-top: 1px solid #f0f0f0; margin-top: .5rem; }
+  .unassigned-section-label {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .07em;
+    color: #aaa; padding: .55rem .85rem .2rem; font-weight: 600;
+  }
+  .unassigned-guest-row {
+    display: flex; align-items: center; gap: .5rem; padding: .45rem .85rem;
+    border-bottom: 1px solid #f5f5f5; font-size: .85rem;
+  }
+  .unassigned-guest-row:last-child { border-bottom: none; }
+  .unassigned-guest-name { flex: 1; }
+  .assign-select {
+    font-size: .78rem; padding: .2rem .4rem; border: 1px solid #ddd;
+    border-radius: 5px; background: #fafafa; cursor: pointer; max-width: 160px;
+  }
+  .assign-select:focus { outline: none; border-color: #888; }
+
+  /* Global unassigned card (no hotel at all) */
+  .unassigned-card {
+    background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    margin-top: 1.25rem; overflow: hidden;
+  }
+  .unassigned-header {
+    padding: 1rem 1.25rem; background: #888; color: #fff;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .hotel-guest-row {
+    display: flex; align-items: center; gap: .75rem; padding: .6rem 1.25rem;
+    border-bottom: 1px solid #f5f5f5; font-size: .875rem;
+  }
+  .hotel-guest-row:last-child { border-bottom: none; }
+  .hotel-guest-name { flex: 1; font-weight: 500; }
+  .hotel-guest-detail { color: #888; font-size: .8rem; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -139,6 +248,15 @@
 <!-- Dashboard -->
 <div id="dashboard">
   <h1 class="title">Rithvik &amp; Shivani — RSVPs</h1>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('rsvps')">RSVPs</button>
+    <button class="tab-btn" onclick="switchTab('accommodation')">Accommodation</button>
+  </div>
+
+  <!-- Tab: RSVPs -->
+  <div class="tab-panel active" id="tab-rsvps">
 
   <!-- Stats -->
   <div class="stats">
@@ -201,7 +319,24 @@
       </tbody>
     </table>
   </div>
-</div>
+
+  </div><!-- end tab-rsvps -->
+
+  <!-- Tab: Accommodation -->
+  <div class="tab-panel" id="tab-accommodation">
+    <div class="hotel-grid" id="hotelGrid"></div>
+    <div class="unassigned-card" id="unassignedCard" style="display:none">
+      <div class="unassigned-header">
+        <span class="hotel-name">No Accommodation Assigned</span>
+        <div class="hotel-meta">
+          <div class="hotel-stat"><div class="hotel-stat-val" id="unassignedCount">0</div><div class="hotel-stat-label">Guests</div></div>
+        </div>
+      </div>
+      <div class="hotel-guests" id="unassignedList"></div>
+    </div>
+  </div>
+
+</div><!-- end dashboard -->
 
 <script>
 const SUPABASE_URL     = 'https://hzfqvmgwetcszealrfok.supabase.co';
@@ -211,6 +346,7 @@ const PASSWORD         = 'rithvikshivani2026';
 const ACCOM_OPTIONS = ['Sheraton','Novotel Chennai','Serene Resort Hyderabad','Villa Beach Paradise Chennai'];
 
 let allRows = [];
+let allRooms = [];
 
 // --- Auth ---
 const gate = document.getElementById('gate'), dashboard = document.getElementById('dashboard');
@@ -230,11 +366,18 @@ pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); })
 async function loadRSVPs() {
   setTbody('<tr class="loading-row"><td colspan="10">Loading…</td></tr>');
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
-      headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
-    });
-    if (!res.ok) throw new Error(await res.text());
-    allRows = await res.json();
+    const [rsvpRes, roomRes] = await Promise.all([
+      fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
+        headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
+      }),
+      fetch(SUPABASE_URL + '/rest/v1/room_groups?select=*&order=created_at.asc', {
+        headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
+      })
+    ]);
+    if (!rsvpRes.ok) throw new Error(await rsvpRes.text());
+    if (!roomRes.ok) throw new Error(await roomRes.text());
+    allRows  = await rsvpRes.json();
+    allRooms = await roomRes.json();
     renderStats(allRows);
     applyFilters();
   } catch(e) {
@@ -479,6 +622,221 @@ function typeBadgeHtml(t) {
 }
 function setTbody(html) { document.getElementById('tbody').innerHTML = html; }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// --- Tabs ---
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', b.textContent.toLowerCase().startsWith(name === 'rsvps' ? 'rsvp' : name));
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'accommodation') renderAccomTab();
+}
+
+// --- Accommodation tab ---
+function renderAccomTab() {
+  const grid = document.getElementById('hotelGrid');
+  const unassignedCard = document.getElementById('unassignedCard');
+
+  // Build hotel → guests map
+  const hotelMap = {};
+  ACCOM_OPTIONS.forEach(h => { hotelMap[h] = []; });
+  const noAccom = [];
+
+  allRows.forEach(r => {
+    if (!r.accommodation?.length) { noAccom.push(r); return; }
+    r.accommodation.forEach(h => { if (hotelMap[h]) hotelMap[h].push(r); });
+  });
+
+  grid.innerHTML = ACCOM_OPTIONS.map(hotel => {
+    const hotelGuests = hotelMap[hotel];
+    const hotelRooms  = allRooms.filter(rm => rm.hotel === hotel);
+
+    // rsvp ids already in a room at this hotel
+    const assignedIds = new Set(hotelRooms.flatMap(rm => rm.rsvp_ids || []));
+    const unassignedHere = hotelGuests.filter(r => !assignedIds.has(r.id));
+
+    const totalGuests = hotelGuests.reduce((s, r) => s + (+r.guests || 0), 0);
+    const roomCount   = hotelRooms.length;
+
+    // Render each room
+    const roomsHtml = hotelRooms.map(rm => {
+      const members = (rm.rsvp_ids || []).map(rid => allRows.find(r => r.id === rid)).filter(Boolean);
+      const membersHtml = members.length
+        ? members.map(r => `
+            <div class="room-guest-row">
+              <span class="room-guest-name">${esc(r.name)}</span>
+              <span class="room-guest-detail">${r.guests} guest${r.guests !== 1 ? 's' : ''}</span>
+              ${r.transportation ? '<span class="room-guest-detail" style="color:#2a6b2a">🚌</span>' : ''}
+              <button class="remove-from-room" onclick="removeFromRoom(${rm.id},${r.id})" title="Remove from room">✕</button>
+            </div>`).join('')
+        : '<div class="room-guest-row" style="color:#bbb;font-size:.82rem;font-style:italic">Empty room</div>';
+
+      return `
+        <div class="room-section" id="room-section-${rm.id}">
+          <div class="room-header">
+            <span class="room-label-val" onclick="startRenameRoom(${rm.id})" id="rl-${rm.id}" title="Click to rename">${esc(rm.label)}</span>
+            <button class="room-del-btn" onclick="deleteRoomGroup(${rm.id})">Delete</button>
+          </div>
+          <div class="room-guests-list" id="rg-${rm.id}">${membersHtml}</div>
+        </div>`;
+    }).join('');
+
+    // Unassigned at this hotel
+    let unassignedHtml = '';
+    if (unassignedHere.length) {
+      const roomOptions = hotelRooms.map(rm => `<option value="${rm.id}">${esc(rm.label)}</option>`).join('');
+      unassignedHtml = `
+        <div class="hotel-unassigned">
+          <div class="unassigned-section-label">Unassigned</div>
+          ${unassignedHere.map(r => `
+            <div class="unassigned-guest-row">
+              <span class="unassigned-guest-name">${esc(r.name)}</span>
+              <span class="room-guest-detail">${r.guests} guest${r.guests !== 1 ? 's' : ''}</span>
+              <select class="assign-select" onchange="assignToRoom(this,${r.id},'${esc(hotel)}')">
+                <option value="">Assign to room…</option>
+                ${roomOptions}
+              </select>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    return `
+      <div class="hotel-card">
+        <div class="hotel-header">
+          <span class="hotel-name">${esc(hotel)}</span>
+          <div class="hotel-meta">
+            <div class="hotel-stat"><div class="hotel-stat-val">${totalGuests}</div><div class="hotel-stat-label">Guests</div></div>
+            <div class="hotel-stat"><div class="hotel-stat-val">${roomCount}</div><div class="hotel-stat-label">Rooms</div></div>
+          </div>
+        </div>
+        <div class="hotel-body">
+          ${roomsHtml || (!unassignedHere.length ? '<div class="hotel-empty">No guests assigned</div>' : '')}
+          <div class="add-room-row">
+            <button class="add-room-btn" onclick="addRoom('${esc(hotel)}')">+ Add Room</button>
+          </div>
+          ${unassignedHtml}
+        </div>
+      </div>`;
+  }).join('');
+
+  // No-accommodation card
+  if (noAccom.length) {
+    const totalGuests = noAccom.reduce((s, r) => s + (+r.guests || 0), 0);
+    document.getElementById('unassignedCount').textContent = totalGuests;
+    document.getElementById('unassignedList').innerHTML = noAccom.map(r => `
+      <div class="hotel-guest-row">
+        <span class="hotel-guest-name">${esc(r.name)}</span>
+        <span class="hotel-guest-detail">${r.guests} guest${r.guests !== 1 ? 's' : ''}</span>
+      </div>`).join('');
+    unassignedCard.style.display = 'block';
+  } else {
+    unassignedCard.style.display = 'none';
+  }
+}
+
+// --- Room API helpers ---
+async function apiRoom(method, path, body) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/room_groups' + path, {
+    method,
+    headers: {
+      'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY,
+      'Content-Type': 'application/json', 'Prefer': 'return=representation'
+    },
+    body: body != null ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// Create a new room for a hotel
+async function addRoom(hotel) {
+  const label = prompt('Room name:', 'Room ' + (allRooms.filter(r => r.hotel === hotel).length + 1));
+  if (!label) return;
+  try {
+    const created = await apiRoom('POST', '', { hotel, label, rsvp_ids: [] });
+    allRooms.push(Array.isArray(created) ? created[0] : created);
+    renderAccomTab();
+  } catch(e) { alert('Failed to create room: ' + e.message); }
+}
+
+// Delete a room group
+async function deleteRoomGroup(id) {
+  if (!confirm('Delete this room?')) return;
+  try {
+    await apiRoom('DELETE', '?id=eq.' + id, null);
+    allRooms = allRooms.filter(r => r.id !== id);
+    renderAccomTab();
+  } catch(e) { alert('Failed to delete room: ' + e.message); }
+}
+
+// Rename room — inline edit
+function startRenameRoom(id) {
+  const rm = allRooms.find(r => r.id === id);
+  const span = document.getElementById('rl-' + id);
+  const header = span.parentElement;
+  span.style.display = 'none';
+  const input = document.createElement('input');
+  input.className = 'room-label-input';
+  input.value = rm.label;
+  const save = document.createElement('button');
+  save.className = 'save-btn'; save.textContent = 'Save';
+  const cancel = document.createElement('button');
+  cancel.className = 'cancel-btn'; cancel.textContent = 'Cancel';
+
+  header.insertBefore(input, span);
+  header.insertBefore(save, span);
+  header.insertBefore(cancel, span);
+  input.focus();
+
+  const finish = () => { input.remove(); save.remove(); cancel.remove(); span.style.display = ''; };
+  cancel.onclick = finish;
+  save.onclick = async () => {
+    const val = input.value.trim();
+    if (!val) { input.focus(); return; }
+    save.disabled = true;
+    try {
+      await apiRoom('PATCH', '?id=eq.' + id, { label: val });
+      allRooms = allRooms.map(r => r.id === id ? { ...r, label: val } : r);
+      span.textContent = val;
+      finish();
+    } catch(e) { alert('Failed to rename: ' + e.message); save.disabled = false; }
+  };
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') save.click(); if (e.key === 'Escape') cancel.click(); });
+}
+
+// Assign a guest to a room
+async function assignToRoom(select, rsvpId, hotel) {
+  const roomId = parseInt(select.value);
+  if (!roomId) return;
+  const rm = allRooms.find(r => r.id === roomId);
+  if (!rm) return;
+  // Remove guest from any other room in this hotel first
+  for (const r of allRooms.filter(r => r.hotel === hotel && r.id !== roomId && r.rsvp_ids?.includes(rsvpId))) {
+    const newIds = r.rsvp_ids.filter(id => id !== rsvpId);
+    await apiRoom('PATCH', '?id=eq.' + r.id, { rsvp_ids: newIds });
+    allRooms = allRooms.map(x => x.id === r.id ? { ...x, rsvp_ids: newIds } : x);
+  }
+  const newIds = [...new Set([...(rm.rsvp_ids || []), rsvpId])];
+  try {
+    await apiRoom('PATCH', '?id=eq.' + roomId, { rsvp_ids: newIds });
+    allRooms = allRooms.map(r => r.id === roomId ? { ...r, rsvp_ids: newIds } : r);
+    renderAccomTab();
+  } catch(e) { alert('Failed to assign: ' + e.message); select.value = ''; }
+}
+
+// Remove a guest from a room
+async function removeFromRoom(roomId, rsvpId) {
+  const rm = allRooms.find(r => r.id === roomId);
+  if (!rm) return;
+  const newIds = (rm.rsvp_ids || []).filter(id => id !== rsvpId);
+  try {
+    await apiRoom('PATCH', '?id=eq.' + roomId, { rsvp_ids: newIds });
+    allRooms = allRooms.map(r => r.id === roomId ? { ...r, rsvp_ids: newIds } : r);
+    renderAccomTab();
+  } catch(e) { alert('Failed to remove: ' + e.message); }
+}
 </script>
 </body>
 </html>
