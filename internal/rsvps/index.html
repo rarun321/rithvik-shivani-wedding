@@ -173,7 +173,11 @@
   }
   @media (max-width: 900px) { .hotel-content-inner { grid-template-columns: 1fr; } }
 
-  .rooms-column { display: flex; flex-direction: column; gap: 1rem; }
+  .rooms-column { display: block; }
+  .rooms-scroll-area { overflow-y: auto; max-height: 60vh; }
+  .rooms-scroll-area::-webkit-scrollbar { width: 5px; }
+  .rooms-scroll-area::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
   .unassigned-panel {
     background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden;
   }
@@ -181,6 +185,9 @@
     padding: .85rem 1.25rem; background: #f5f5f5; border-bottom: 1px solid #eee;
     display: flex; justify-content: space-between; align-items: center;
   }
+  .unassigned-panel-body { overflow-y: auto; max-height: 60vh; }
+  .unassigned-panel-body::-webkit-scrollbar { width: 5px; }
+  .unassigned-panel-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
   .unassigned-panel-title { font-size: .9rem; font-weight: 600; color: #555; }
   .unassigned-panel-count { font-size: .8rem; color: #888; }
 
@@ -411,23 +418,23 @@ pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); })
 async function loadRSVPs() {
   setTbody('<tr class="loading-row"><td colspan="10">Loading…</td></tr>');
   try {
-    const [rsvpRes, roomRes] = await Promise.all([
-      fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
-        headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
-      }),
-      fetch(SUPABASE_URL + '/rest/v1/room_groups?select=*&order=created_at.asc', {
-        headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
-      })
-    ]);
+    const rsvpRes = await fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
+      headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
+    });
     if (!rsvpRes.ok) throw new Error(await rsvpRes.text());
-    if (!roomRes.ok) throw new Error(await roomRes.text());
-    allRows  = await rsvpRes.json();
-    allRooms = await roomRes.json();
+    allRows = await rsvpRes.json();
     renderStats(allRows);
     applyFilters();
   } catch(e) {
     setTbody(`<tr class="loading-row"><td colspan="10">Error: ${e.message}</td></tr>`);
   }
+  // Load rooms separately — don't break RSVP tab if table missing
+  try {
+    const roomRes = await fetch(SUPABASE_URL + '/rest/v1/room_groups?select=*&order=created_at.asc', {
+      headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
+    });
+    if (roomRes.ok) allRooms = await roomRes.json();
+  } catch(e) { /* room_groups table not set up yet */ }
 }
 document.getElementById('refreshBtn').onclick = loadRSVPs;
 
@@ -748,7 +755,10 @@ function renderAccomTab() {
   const content = document.getElementById('hotelTabContent');
   content.innerHTML = ACCOM_OPTIONS.map(hotel => {
     const safeId = hotel.replace(/\s/g,'_');
-    return `<div class="hotel-content" id="hcontent-${safeId}">${buildHotelContent(hotel, hotelMap[hotel])}</div>`;
+    let inner = '';
+    try { inner = buildHotelContent(hotel, hotelMap[hotel]); }
+    catch(e) { inner = `<div style="padding:2rem;color:#c00">Render error: ${e.message}</div>`; console.error(hotel, e); }
+    return `<div class="hotel-content" id="hcontent-${safeId}">${inner}</div>`;
   }).join('') + buildNoAccomHtml(noAccom);
 
   // Restore or default active tab
@@ -806,6 +816,7 @@ function buildHotelContent(hotel, hotelGuests) {
         <span class="unassigned-panel-title">Unassigned Guests</span>
         <span class="unassigned-panel-count">${partialGuests.length} RSVP${partialGuests.length !== 1 ? 's' : ''}</span>
       </div>
+      <div class="unassigned-panel-body">
       ${partialGuests.map(r => {
         const assigned  = totalAssignedAtHotel(hotel, r.id);
         const remaining = (+r.guests || 0) - assigned;
@@ -824,15 +835,16 @@ function buildHotelContent(hotel, hotelGuests) {
           <button class="save-btn" style="font-size:.75rem" onclick="assignToRoom('${esc(hotel)}',${r.id})">Assign</button>
         </div>`;
       }).join('')}
+      </div>
     </div>` : '';
 
   return `
     <div class="hotel-content-inner">
       <div class="rooms-column">
-        ${roomsHtml}
         <div class="add-room-row">
           <button class="add-room-btn" onclick="addRoom('${esc(hotel)}')">+ Add Room</button>
         </div>
+        <div class="rooms-scroll-area">${roomsHtml}</div>
       </div>
       <div>${unassignedHtml}</div>
     </div>`;
