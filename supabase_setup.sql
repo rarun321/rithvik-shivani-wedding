@@ -38,6 +38,8 @@ create policy "anon can insert rsvp"
 -- ============================================================
 alter table public.rsvps add column if not exists events         text;
 alter table public.rsvps add column if not exists type           text;
-alter table public.rsvps add column if not exists accommodation  text;
+alter table public.rsvps add column if not exists accommodation  text[];
+-- If column already exists as text, convert it:
+-- alter table public.rsvps alter column accommodation type text[] using array[accommodation]::text[];
 alter table public.rsvps add column if not exists rooms          integer;
 alter table public.rsvps add column if not exists transportation boolean not null default false;

@@ -162,16 +162,16 @@
         <option value="chennai">Chennai</option>
       </select>
     </div>
-    <div class="filter-group">
-      <label for="filterAccom">Accommodation</label>
-      <select id="filterAccom">
-        <option value="">All accommodation</option>
-        <option value="Sheraton">Sheraton</option>
-        <option value="Novotel Chennai">Novotel Chennai</option>
-        <option value="Serene Resort Hyderabad">Serene Resort Hyderabad</option>
-        <option value="Villa Beach Paradise Chennai">Villa Beach Paradise Chennai</option>
-        <option value="none">None</option>
-      </select>
+    <div class="filter-group" style="position:relative">
+      <label>Accommodation</label>
+      <button type="button" id="accomDropBtn" onclick="toggleAccomDrop()" style="padding:.5rem .85rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem;background:#fafafa;cursor:pointer;text-align:left;min-width:180px">All accommodation ▾</button>
+      <div id="accomDrop" style="display:none;position:absolute;top:100%;left:0;z-index:100;background:#fff;border:1px solid #ddd;border-radius:8px;padding:.6rem .8rem;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:220px;margin-top:.25rem;display:none;flex-direction:column;gap:.4rem">
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer"><input type="checkbox" value="__none__" class="accom-filter-cb" onchange="applyFilters()"> None assigned</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer"><input type="checkbox" value="Sheraton" class="accom-filter-cb" onchange="applyFilters()"> Sheraton</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer"><input type="checkbox" value="Novotel Chennai" class="accom-filter-cb" onchange="applyFilters()"> Novotel Chennai</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer"><input type="checkbox" value="Serene Resort Hyderabad" class="accom-filter-cb" onchange="applyFilters()"> Serene Resort Hyderabad</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer"><input type="checkbox" value="Villa Beach Paradise Chennai" class="accom-filter-cb" onchange="applyFilters()"> Villa Beach Paradise Chennai</label>
+      </div>
     </div>
     <span class="count-label" id="countLabel"></span>
     <button class="refresh-btn" id="refreshBtn">Refresh</button>
@@ -256,14 +256,18 @@ function renderStats(rows) {
 function applyFilters() {
   const search    = document.getElementById('searchInput').value.toLowerCase();
   const evFilt    = document.getElementById('filterEvents').value;
-  const accomFilt = document.getElementById('filterAccom').value;
+  const accomFilts = [...document.querySelectorAll('.accom-filter-cb:checked')].map(cb => cb.value);
 
   const filtered = allRows.filter(r => {
     if (search && !r.name?.toLowerCase().includes(search)) return false;
     if (evFilt && r.events !== evFilt) return false;
-    if (accomFilt) {
-      if (accomFilt === 'none' && r.accommodation) return false;
-      if (accomFilt !== 'none' && r.accommodation !== accomFilt) return false;
+    if (accomFilts.length) {
+      const hasNone  = accomFilts.includes('__none__');
+      const venues   = accomFilts.filter(v => v !== '__none__');
+      const rowEmpty = !r.accommodation?.length;
+      const matchNone  = hasNone && rowEmpty;
+      const matchVenue = venues.length && venues.every(v => r.accommodation?.includes(v));
+      if (!matchNone && !matchVenue) return false;
     }
     return true;
   });
@@ -279,15 +283,33 @@ function applyFilters() {
   setTbody(filtered.map((r, i) => buildRow(r, i + 1)).join(''));
 }
 
-['searchInput','filterEvents','filterAccom'].forEach(id =>
+['searchInput','filterEvents'].forEach(id =>
   document.getElementById(id).addEventListener('input', applyFilters)
 );
+
+function toggleAccomDrop() {
+  const drop = document.getElementById('accomDrop');
+  drop.style.display = drop.style.display === 'flex' ? 'none' : 'flex';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#accomDrop') && !e.target.closest('#accomDropBtn')) {
+    document.getElementById('accomDrop').style.display = 'none';
+  }
+});
+function updateAccomBtn() {
+  const checked = [...document.querySelectorAll('.accom-filter-cb:checked')].map(cb => cb.parentElement.textContent.trim());
+  document.getElementById('accomDropBtn').textContent =
+    checked.length === 0 ? 'All accommodation ▾' : checked.join(', ') + ' ▾';
+}
+document.querySelectorAll('.accom-filter-cb').forEach(cb => cb.addEventListener('change', () => { updateAccomBtn(); applyFilters(); }));
 
 function buildRow(r, i) {
   const date = r.created_at
     ? new Date(r.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
     : '—';
-  const accomDisplay = r.accommodation || '<span style="color:#bbb">—</span>';
+  const accomDisplay = r.accommodation?.length
+    ? r.accommodation.map(a => `<span style="background:#f0f0f0;padding:.1rem .4rem;border-radius:4px;font-size:.78rem;white-space:nowrap">${esc(a)}</span>`).join(' ')
+    : '<span style="color:#bbb">—</span>';
   const roomsDisplay = r.rooms != null ? r.rooms : '<span style="color:#bbb">—</span>';
   return `<tr data-id="${r.id}">
     <td style="color:#aaa">${i}</td>
@@ -371,23 +393,37 @@ function cancelGuests(id) {
 // --- Edit: Accommodation ---
 function editAccom(id) {
   const row = allRows.find(r => r.id === id);
-  const opts = ACCOM_OPTIONS.map(o => `<option value="${o}" ${row.accommodation === o ? 'selected' : ''}>${o}</option>`).join('');
+  const current = row.accommodation || [];
+  const checks = ACCOM_OPTIONS.map(o =>
+    `<label style="display:flex;align-items:center;gap:.35rem;font-size:.85rem;white-space:nowrap;cursor:pointer">
+      <input type="checkbox" value="${o}" ${current.includes(o) ? 'checked' : ''}> ${o}
+    </label>`
+  ).join('');
   document.getElementById('ac-' + id).innerHTML =
-    `<select class="edit-select" id="ai-${id}"><option value="">— None —</option>${opts}</select>
-     <button class="save-btn" onclick="saveAccom(${id})">Save</button>
-     <button class="cancel-btn" onclick="cancelAccom(${id})">Cancel</button>`;
+    `<div id="ai-${id}" style="display:flex;flex-direction:column;gap:.3rem">${checks}</div>
+     <div style="display:flex;gap:.3rem;margin-top:.3rem">
+       <button class="save-btn" onclick="saveAccom(${id})">Save</button>
+       <button class="cancel-btn" onclick="cancelAccom(${id})">Cancel</button>
+     </div>`;
 }
 async function saveAccom(id) {
-  const val = document.getElementById('ai-' + id).value || null;
+  const container = document.getElementById('ai-' + id);
+  const val = [...container.querySelectorAll('input:checked')].map(cb => cb.value);
   const btn = document.querySelector(`#ac-${id} .save-btn`); btn.disabled = true;
   try {
-    await patchRow(id, { accommodation: val });
-    document.getElementById('ac-' + id).innerHTML = `<span class="editable-val" onclick="editAccom(${id})">${val || '<span style="color:#bbb">—</span>'}</span>`;
+    await patchRow(id, { accommodation: val.length ? val : null });
+    const display = val.length
+      ? val.map(a => `<span style="background:#f0f0f0;padding:.1rem .4rem;border-radius:4px;font-size:.78rem;white-space:nowrap">${esc(a)}</span>`).join(' ')
+      : '<span style="color:#bbb">—</span>';
+    document.getElementById('ac-' + id).innerHTML = `<span class="editable-val" onclick="editAccom(${id})">${display}</span>`;
   } catch(e) { alert('Update failed: ' + e.message); btn.disabled = false; }
 }
 function cancelAccom(id) {
   const row = allRows.find(r => r.id === id);
-  document.getElementById('ac-' + id).innerHTML = `<span class="editable-val" onclick="editAccom(${id})">${row.accommodation || '<span style="color:#bbb">—</span>'}</span>`;
+  const display = row.accommodation?.length
+    ? row.accommodation.map(a => `<span style="background:#f0f0f0;padding:.1rem .4rem;border-radius:4px;font-size:.78rem;white-space:nowrap">${esc(a)}</span>`).join(' ')
+    : '<span style="color:#bbb">—</span>';
+  document.getElementById('ac-' + id).innerHTML = `<span class="editable-val" onclick="editAccom(${id})">${display}</span>`;
 }
 
 // --- Edit: Rooms ---
