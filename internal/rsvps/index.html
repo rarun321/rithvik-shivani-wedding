@@ -83,6 +83,7 @@
   .badge-hyd     { background: #fff3e0; color: #a35c00; }
   .badge-chennai { background: #e8eeff; color: #2a3fbf; }
   .badge-full    { background: #f3e8ff; color: #6a2abf; }
+  .badge-sangeet { background: #fff0f6; color: #b02070; }
 
   /* Inline edit shared */
   .editable-cell { display: flex; align-items: center; gap: .35rem; }
@@ -160,6 +161,7 @@
         <option value="both">Both</option>
         <option value="hyderabad">Hyderabad</option>
         <option value="chennai">Chennai</option>
+        <option value="sangeet">Sangeet</option>
       </select>
     </div>
     <div class="filter-group" style="position:relative">
@@ -466,12 +468,12 @@ async function deleteRow(id, btn) {
 
 // --- Helpers ---
 function evBadgeHtml(ev) {
-  const map = { both: ['badge-both','Both'], hyderabad: ['badge-hyd','Hyderabad'], chennai: ['badge-chennai','Chennai'] };
+  const map = { both: ['badge-both','Both'], hyderabad: ['badge-hyd','Hyderabad'], chennai: ['badge-chennai','Chennai'], sangeet: ['badge-sangeet','Sangeet'] };
   const [cls, label] = map[ev] || ['', ev || '—'];
   return `<span class="badge ${cls}">${label}</span>`;
 }
 function typeBadgeHtml(t) {
-  const map = { wedding_full: ['badge-full','Full'], wedding_hyd: ['badge-hyd','Hyderabad Only'], wedding_chennai: ['badge-chennai','Chennai Only'] };
+  const map = { wedding_full: ['badge-full','Full'], wedding_hyd: ['badge-hyd','Hyderabad Only'], wedding_chennai: ['badge-chennai','Chennai Only'], sangeet: ['badge-sangeet','Sangeet'] };
   const [cls, label] = map[t] || ['', t || '—'];
   return `<span class="badge ${cls}">${label}</span>`;
 }
