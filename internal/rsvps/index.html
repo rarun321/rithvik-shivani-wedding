@@ -662,6 +662,7 @@ function renderAccomTab() {
     // Render each room
     const roomsHtml = hotelRooms.map(rm => {
       const members = (rm.rsvp_ids || []).map(rid => allRows.find(r => r.id === rid)).filter(Boolean);
+      const totalInRoom = members.reduce((s, r) => s + (+r.guests || 0), 0);
       const membersHtml = members.length
         ? members.map(r => `
             <div class="room-guest-row">
@@ -672,10 +673,19 @@ function renderAccomTab() {
             </div>`).join('')
         : '<div class="room-guest-row" style="color:#bbb;font-size:.82rem;font-style:italic">Empty room</div>';
 
+      const roomTypeHtml = hotel === 'Sheraton'
+        ? `<select class="assign-select" style="max-width:100px;font-size:.75rem" onchange="saveRoomType(${rm.id},this.value)">
+             <option value="">Type…</option>
+             ${['Standard','Suite','Villa'].map(t => `<option value="${t}" ${rm.room_type === t ? 'selected' : ''}>${t}</option>`).join('')}
+           </select>`
+        : '';
+
       return `
         <div class="room-section" id="room-section-${rm.id}">
           <div class="room-header">
             <span class="room-label-val" onclick="startRenameRoom(${rm.id})" id="rl-${rm.id}" title="Click to rename">${esc(rm.label)}</span>
+            ${members.length ? `<span style="font-size:.75rem;color:#888;margin-right:.25rem">${totalInRoom} guest${totalInRoom !== 1 ? 's' : ''}</span>` : ''}
+            ${roomTypeHtml}
             <button class="room-del-btn" onclick="deleteRoomGroup(${rm.id})">Delete</button>
           </div>
           <div class="room-guests-list" id="rg-${rm.id}">${membersHtml}</div>
@@ -824,6 +834,14 @@ async function assignToRoom(select, rsvpId, hotel) {
     allRooms = allRooms.map(r => r.id === roomId ? { ...r, rsvp_ids: newIds } : r);
     renderAccomTab();
   } catch(e) { alert('Failed to assign: ' + e.message); select.value = ''; }
+}
+
+// Save room type (Sheraton only)
+async function saveRoomType(id, value) {
+  try {
+    await apiRoom('PATCH', '?id=eq.' + id, { room_type: value || null });
+    allRooms = allRooms.map(r => r.id === id ? { ...r, room_type: value || null } : r);
+  } catch(e) { alert('Failed to save room type: ' + e.message); }
 }
 
 // Remove a guest from a room
