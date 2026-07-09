@@ -271,6 +271,40 @@
   }
   .assign-select:focus { outline: none; border-color: #888; }
 
+  /* Add RSVP Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    z-index: 1000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff; border-radius: 14px; padding: 2rem;
+    width: 100%; max-width: 480px; box-shadow: 0 8px 40px rgba(0,0,0,.18);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-box h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: 1.5rem; color: #23150a; }
+  .modal-field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1rem; }
+  .modal-field label { font-size: .8rem; color: #888; text-transform: uppercase; letter-spacing: .05em; }
+  .modal-field input, .modal-field select {
+    padding: .55rem .85rem; border: 1px solid #ddd; border-radius: 8px;
+    font-size: .9rem; outline: none; background: #fafafa;
+  }
+  .modal-field input:focus, .modal-field select:focus { border-color: #888; }
+  .modal-accom { display: flex; flex-direction: column; gap: .35rem; }
+  .modal-accom label { display: flex; align-items: center; gap: .5rem; font-size: .875rem; cursor: pointer; }
+  .modal-footer { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem; }
+  .modal-cancel {
+    padding: .55rem 1.2rem; background: none; border: 1px solid #ddd;
+    border-radius: 8px; font-size: .9rem; cursor: pointer; color: #666;
+  }
+  .modal-cancel:hover { border-color: #888; }
+  .modal-submit {
+    padding: .55rem 1.4rem; background: #23150a; color: #fff;
+    border: none; border-radius: 8px; font-size: .9rem; cursor: pointer;
+  }
+  .modal-submit:hover { background: #3a2318; }
+  .modal-submit:disabled { opacity: .5; cursor: not-allowed; }
+
   /* Global unassigned card (no hotel at all) */
   .unassigned-card {
     background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.07);
@@ -350,7 +384,11 @@
       </div>
     </div>
     <span class="count-label" id="countLabel"></span>
-    <button class="refresh-btn" id="refreshBtn">Refresh</button>
+    <button class="refresh-btn" onclick="openAddRSVP()" style="background:#1a3a6b;margin-left:auto">+ Add RSVP</button>
+    <div style="display:flex;gap:.5rem">
+      <button class="refresh-btn" id="refreshBtn" style="margin-left:0">Refresh</button>
+      <button class="refresh-btn" onclick="exportRSVPs()" style="background:#2a6b2a;margin-left:0">Export CSV</button>
+    </div>
   </div>
 
   <!-- Table -->
@@ -381,7 +419,10 @@
   <!-- Tab: Accommodation -->
   <div class="tab-panel" id="tab-accommodation">
     <div style="display:flex;justify-content:flex-end;margin-bottom:.75rem">
-      <button class="refresh-btn" onclick="loadRSVPs().then(renderAccomTab)">Refresh</button>
+      <div style="display:flex;gap:.5rem">
+        <button class="refresh-btn" onclick="loadRSVPs().then(renderAccomTab)" style="margin-left:0">Refresh</button>
+        <button class="refresh-btn" onclick="exportAccommodation()" style="background:#2a6b2a;margin-left:0">Export CSV</button>
+      </div>
     </div>
     <div class="stats" id="accomStats" style="margin-bottom:1.5rem"></div>
     <div class="hotel-tabs-bar" id="hotelTabsBar"></div>
@@ -389,6 +430,63 @@
   </div>
 
 </div><!-- end dashboard -->
+
+<!-- Add RSVP Modal -->
+<div class="modal-overlay" id="addRsvpModal">
+  <div class="modal-box">
+    <h2>Add RSVP</h2>
+    <div class="modal-field">
+      <label>Name *</label>
+      <input type="text" id="ar-name" placeholder="Full name">
+    </div>
+    <div class="modal-field">
+      <label>Guests *</label>
+      <input type="number" id="ar-guests" min="1" value="1">
+    </div>
+    <div class="modal-field">
+      <label>Events</label>
+      <select id="ar-events">
+        <option value="">None</option>
+        <option value="both">Both</option>
+        <option value="hyderabad">Hyderabad</option>
+        <option value="chennai">Chennai</option>
+        <option value="sangeet">Sangeet</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Invite Type</label>
+      <select id="ar-type">
+        <option value="">None</option>
+        <option value="wedding_full">Full</option>
+        <option value="wedding_hyd">Hyderabad Only</option>
+        <option value="wedding_chennai">Chennai Only</option>
+        <option value="sangeet">Sangeet</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Accommodation</label>
+      <div class="modal-accom">
+        <label><input type="checkbox" class="ar-accom" value="Sheraton"> Sheraton</label>
+        <label><input type="checkbox" class="ar-accom" value="Novotel Chennai"> Novotel Chennai</label>
+        <label><input type="checkbox" class="ar-accom" value="Serene Resort Hyderabad"> Serene Resort Hyderabad</label>
+        <label><input type="checkbox" class="ar-accom" value="Villa Beach Paradise Chennai"> Villa Beach Paradise Chennai</label>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label># Rooms</label>
+      <input type="number" id="ar-rooms" min="0" placeholder="—">
+    </div>
+    <div class="modal-field" style="flex-direction:row;align-items:center;gap:.75rem">
+      <label style="text-transform:none;letter-spacing:0;font-size:.9rem;color:#444;cursor:pointer">
+        <input type="checkbox" id="ar-transport" style="margin-right:.4rem">Transport needed
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeAddRSVP()">Cancel</button>
+      <button class="modal-submit" id="ar-submit" onclick="submitAddRSVP()">Add RSVP</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const SUPABASE_URL     = 'https://hzfqvmgwetcszealrfok.supabase.co';
@@ -991,6 +1089,126 @@ async function saveRoomType(id, value) {
     await apiRoom('PATCH', '?id=eq.' + id, { room_type: value || null });
     allRooms = allRooms.map(r => r.id === id ? { ...r, room_type: value || null } : r);
   } catch(e) { alert('Failed to save room type: ' + e.message); }
+}
+
+// --- Add RSVP Modal ---
+function openAddRSVP() {
+  document.getElementById('ar-name').value = '';
+  document.getElementById('ar-guests').value = '1';
+  document.getElementById('ar-events').value = '';
+  document.getElementById('ar-type').value = '';
+  document.getElementById('ar-rooms').value = '';
+  document.getElementById('ar-transport').checked = false;
+  document.querySelectorAll('.ar-accom').forEach(cb => cb.checked = false);
+  document.getElementById('ar-submit').disabled = false;
+  document.getElementById('addRsvpModal').classList.add('open');
+  setTimeout(() => document.getElementById('ar-name').focus(), 50);
+}
+
+function closeAddRSVP() {
+  document.getElementById('addRsvpModal').classList.remove('open');
+}
+
+async function submitAddRSVP() {
+  const name = document.getElementById('ar-name').value.trim();
+  const guests = parseInt(document.getElementById('ar-guests').value);
+  if (!name) { document.getElementById('ar-name').focus(); return; }
+  if (!guests || guests < 1) { document.getElementById('ar-guests').focus(); return; }
+
+  const events = document.getElementById('ar-events').value || null;
+  const type = document.getElementById('ar-type').value || null;
+  const accom = [...document.querySelectorAll('.ar-accom:checked')].map(cb => cb.value);
+  const rooms = document.getElementById('ar-rooms').value !== '' ? parseInt(document.getElementById('ar-rooms').value) : null;
+  const transportation = document.getElementById('ar-transport').checked;
+
+  const btn = document.getElementById('ar-submit');
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rsvps', {
+      method: 'POST',
+      headers: {
+        'apikey': SERVICE_ROLE_KEY,
+        'Authorization': 'Bearer ' + SERVICE_ROLE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ name, guests, events, type, accommodation: accom.length ? accom : null, rooms, transportation })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const [newRow] = await res.json();
+    allRows = [newRow, ...allRows];
+    renderStats(allRows);
+    applyFilters();
+    closeAddRSVP();
+  } catch(e) {
+    alert('Failed to add RSVP: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Add RSVP';
+  }
+}
+
+// Close modal on overlay click
+document.getElementById('addRsvpModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeAddRSVP();
+});
+
+function downloadCSV(filename, rows) {
+  const csv = rows.map(r => r.map(cell => {
+    const s = cell == null ? '' : String(cell);
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportRSVPs() {
+  const header = ['Name','Guests','Events','Invite Type','Accommodation','# Rooms','Transport','Submitted Date'];
+  const rows = allRows.map(r => [
+    r.name,
+    r.guests,
+    Array.isArray(r.events) ? r.events.join('; ') : (r.events || ''),
+    r.type || '',
+    Array.isArray(r.accommodation) ? r.accommodation.join('; ') : (r.accommodation || ''),
+    r.rooms || '',
+    r.transportation ? 'Yes' : 'No',
+    r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
+  ]);
+  downloadCSV('rsvps.csv', [header, ...rows]);
+}
+
+function exportAccommodation() {
+  const header = ['Hotel','Room','Room Type','Guest Name','Guests Assigned','Transport'];
+  const rows = [];
+  const hotels = [...new Set(allRooms.map(r => r.hotel))];
+  for (const hotel of hotels) {
+    const hotelRooms = allRooms.filter(r => r.hotel === hotel);
+    for (const rm of hotelRooms) {
+      const asgn = assignmentsOf(rm);
+      const entries = Object.entries(asgn);
+      if (entries.length === 0) {
+        rows.push([hotel, rm.label, rm.room_type || '', '', '', '']);
+      } else {
+        for (const [rsvpId, count] of entries) {
+          const rsvp = allRows.find(r => r.id === parseInt(rsvpId));
+          rows.push([
+            hotel,
+            rm.label,
+            rm.room_type || '',
+            rsvp ? rsvp.name : 'Unknown',
+            count,
+            rsvp?.transportation ? 'Yes' : 'No'
+          ]);
+        }
+      }
+    }
+  }
+  downloadCSV('accommodation.csv', [header, ...rows]);
 }
 </script>
 </body>
