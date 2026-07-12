@@ -554,9 +554,9 @@ function applyFilters() {
     if (accomFilts.length) {
       const hasNone  = accomFilts.includes('__none__');
       const venues   = accomFilts.filter(v => v !== '__none__');
-      const rowEmpty = !r.accommodation?.length;
+      const rowEmpty = !r.accommodation || r.accommodation.length === 0;
       const matchNone  = hasNone && rowEmpty;
-      const matchVenue = venues.length && venues.every(v => r.accommodation?.includes(v));
+      const matchVenue = venues.length > 0 && venues.some(v => r.accommodation?.includes(v));
       if (!matchNone && !matchVenue) return false;
     }
     return true;
