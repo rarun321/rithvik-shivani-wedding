@@ -381,6 +381,7 @@
         <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer"><input type="checkbox" value="Novotel Chennai" class="accom-filter-cb" onchange="applyFilters()"> Novotel Chennai</label>
         <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer"><input type="checkbox" value="Serene Resort Hyderabad" class="accom-filter-cb" onchange="applyFilters()"> Serene Resort Hyderabad</label>
         <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer"><input type="checkbox" value="Villa Beach Paradise Chennai" class="accom-filter-cb" onchange="applyFilters()"> Villa Beach Paradise Chennai</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;cursor:pointer"><input type="checkbox" value="Solace By The Sea Chennai" class="accom-filter-cb" onchange="applyFilters()"> Solace By The Sea Chennai</label>
       </div>
     </div>
     <span class="count-label" id="countLabel"></span>
@@ -469,6 +470,7 @@
         <label><input type="checkbox" class="ar-accom" value="Novotel Chennai"> Novotel Chennai</label>
         <label><input type="checkbox" class="ar-accom" value="Serene Resort Hyderabad"> Serene Resort Hyderabad</label>
         <label><input type="checkbox" class="ar-accom" value="Villa Beach Paradise Chennai"> Villa Beach Paradise Chennai</label>
+        <label><input type="checkbox" class="ar-accom" value="Solace By The Sea Chennai"> Solace By The Sea Chennai</label>
       </div>
     </div>
     <div class="modal-field" style="flex-direction:row;align-items:center;gap:.75rem">
@@ -488,7 +490,7 @@ const SUPABASE_URL     = 'https://hzfqvmgwetcszealrfok.supabase.co';
 const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6ZnF2bWd3ZXRjc3plYWxyZm9rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjQzNzQxNywiZXhwIjoyMDk4MDEzNDE3fQ.Yai7ltVNO7PuiaIuE06a2Pdnr8vGya7pbFmoNcy5UKk';
 const PASSWORD         = 'rithvikshivani2026';
 
-const ACCOM_OPTIONS = ['Sheraton','Novotel Chennai','Serene Resort Hyderabad','Villa Beach Paradise Chennai'];
+const ACCOM_OPTIONS = ['Sheraton','Novotel Chennai','Serene Resort Hyderabad','Villa Beach Paradise Chennai','Solace By The Sea Chennai'];
 
 let allRows = [];
 let allRooms = [];
@@ -681,7 +683,7 @@ function cancelGuests(id) {
 // --- Edit: Accommodation ---
 function editAccom(id) {
   const row = allRows.find(r => r.id === id);
-  const current = row.accommodation || [];
+  const current = (row.accommodation || []).filter(Boolean);
   const checks = ACCOM_OPTIONS.map(o =>
     `<label style="display:flex;align-items:center;gap:.35rem;font-size:.85rem;white-space:nowrap;cursor:pointer">
       <input type="checkbox" value="${o}" ${current.includes(o) ? 'checked' : ''}> ${o}
