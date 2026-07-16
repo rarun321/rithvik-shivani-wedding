@@ -271,6 +271,23 @@
   }
   .assign-select:focus { outline: none; border-color: #888; }
 
+  /* Family radio buttons */
+  .family-radios { display: flex; gap: .35rem; align-items: center; }
+  .family-radio-label {
+    display: flex; align-items: center; gap: .2rem; cursor: pointer;
+    font-size: .75rem; padding: .15rem .4rem; border-radius: 4px;
+    border: 1px solid #e0e0e0; white-space: nowrap; user-select: none;
+  }
+  .family-radio-label input { display: none; }
+  .family-radio-label.selected-N { background: #e8f0ff; border-color: #4a6abf; color: #1a3a8f; font-weight: 600; }
+  .family-radio-label.selected-R { background: #fff3e8; border-color: #bf7a2a; color: #8f4a00; font-weight: 600; }
+  .family-badge {
+    display: inline-block; padding: .15rem .45rem; border-radius: 4px;
+    font-size: .72rem; font-weight: 600; white-space: nowrap;
+  }
+  .family-badge-N { background: #e8f0ff; color: #1a3a8f; }
+  .family-badge-R { background: #fff3e8; color: #8f4a00; }
+
   /* Add RSVP Modal */
   .modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45);
@@ -372,6 +389,14 @@
         <option value="sangeet">Sangeet</option>
       </select>
     </div>
+    <div class="filter-group">
+      <label for="filterFamily">Family</label>
+      <select id="filterFamily">
+        <option value="">All</option>
+        <option value="Narahari">Narahari</option>
+        <option value="Rajaraman">Rajaraman</option>
+      </select>
+    </div>
     <div class="filter-group" style="position:relative">
       <label>Accommodation</label>
       <button type="button" id="accomDropBtn" onclick="toggleAccomDrop()" style="padding:.5rem .85rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem;background:#fafafa;cursor:pointer;text-align:left;min-width:180px">All accommodation ▾</button>
@@ -403,13 +428,14 @@
           <th>Events</th>
           <th>Invite Type</th>
           <th>Accommodation</th>
+          <th>Family</th>
           <th>Transport</th>
           <th>Submitted</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="loading-row"><td colspan="9">Loading…</td></tr>
+        <tr class="loading-row"><td colspan="10">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -473,6 +499,14 @@
         <label><input type="checkbox" class="ar-accom" value="Solace By The Sea Chennai"> Solace By The Sea Chennai</label>
       </div>
     </div>
+    <div class="modal-field">
+      <label>Family</label>
+      <select id="ar-family">
+        <option value="">None</option>
+        <option value="Narahari">Narahari</option>
+        <option value="Rajaraman">Rajaraman</option>
+      </select>
+    </div>
     <div class="modal-field" style="flex-direction:row;align-items:center;gap:.75rem">
       <label style="text-transform:none;letter-spacing:0;font-size:.9rem;color:#444;cursor:pointer">
         <input type="checkbox" id="ar-transport" style="margin-right:.4rem">Transport needed
@@ -511,7 +545,7 @@ pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); })
 
 // --- Data ---
 async function loadRSVPs() {
-  setTbody('<tr class="loading-row"><td colspan="9">Loading…</td></tr>');
+  setTbody('<tr class="loading-row"><td colspan="10">Loading…</td></tr>');
   try {
     const rsvpRes = await fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
       headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
@@ -521,7 +555,7 @@ async function loadRSVPs() {
     renderStats(allRows);
     applyFilters();
   } catch(e) {
-    setTbody(`<tr class="loading-row"><td colspan="9">Error: ${e.message}</td></tr>`);
+    setTbody(`<tr class="loading-row"><td colspan="10">Error: ${e.message}</td></tr>`);
   }
   // Load rooms separately — don't break RSVP tab if table missing
   try {
@@ -548,11 +582,13 @@ function renderStats(rows) {
 function applyFilters() {
   const search    = document.getElementById('searchInput').value.toLowerCase();
   const evFilt    = document.getElementById('filterEvents').value;
+  const famFilt   = document.getElementById('filterFamily').value;
   const accomFilts = [...document.querySelectorAll('.accom-filter-cb:checked')].map(cb => cb.value);
 
   const filtered = allRows.filter(r => {
     if (search && !r.name?.toLowerCase().includes(search)) return false;
     if (evFilt && r.events !== evFilt) return false;
+    if (famFilt && r.family !== famFilt) return false;
     if (accomFilts.length) {
       const hasNone  = accomFilts.includes('__none__');
       const venues   = accomFilts.filter(v => v !== '__none__');
@@ -568,14 +604,14 @@ function applyFilters() {
     filtered.length === allRows.length ? `${allRows.length} responses` : `${filtered.length} of ${allRows.length}`;
 
   if (!filtered.length) {
-    setTbody('<tr><td colspan="9" class="empty">No matching responses.</td></tr>');
+    setTbody('<tr><td colspan="10" class="empty">No matching responses.</td></tr>');
     return;
   }
 
   setTbody(filtered.map((r, i) => buildRow(r, i + 1)).join(''));
 }
 
-['searchInput','filterEvents'].forEach(id =>
+['searchInput','filterEvents','filterFamily'].forEach(id =>
   document.getElementById(id).addEventListener('input', applyFilters)
 );
 
@@ -609,6 +645,16 @@ function buildRow(r, i) {
     <td>${evBadgeHtml(r.events)}</td>
     <td>${typeBadgeHtml(r.type)}</td>
     <td><div class="editable-cell" id="ac-${r.id}"><span class="editable-val" onclick="editAccom(${r.id})">${accomDisplay}</span></div></td>
+    <td>
+      <div class="family-radios">
+        ${['Narahari','Rajaraman'].map(f => `
+          <label class="family-radio-label ${r.family === f ? (f === 'Narahari' ? 'selected-N' : 'selected-R') : ''}" id="fl-${r.id}-${f}" title="${f}">
+            <input type="radio" name="family-${r.id}" value="${f}" ${r.family === f ? 'checked' : ''} onchange="saveFamily(${r.id},'${f}')">
+            ${f[0]}
+          </label>`).join('')}
+        ${r.family ? `<span style="font-size:.7rem;color:#aaa;cursor:pointer" onclick="saveFamily(${r.id},null)" title="Clear">✕</span>` : ''}
+      </div>
+    </td>
     <td style="text-align:center"><input type="checkbox" class="transport-cb" ${r.transportation ? 'checked' : ''} onchange="saveField(${r.id},'transportation',this.checked)"></td>
     <td style="color:#888;font-size:.8rem">${date}</td>
     <td><button class="del-btn" onclick="deleteRow(${r.id},this)">Delete</button></td>
@@ -629,6 +675,13 @@ async function patchRow(id, fields) {
 async function saveField(id, field, value) {
   try { await patchRow(id, { [field]: value }); renderStats(allRows); }
   catch(e) { alert('Update failed: ' + e.message); }
+}
+
+async function saveFamily(id, value) {
+  try {
+    await patchRow(id, { family: value });
+    applyFilters();
+  } catch(e) { alert('Update failed: ' + e.message); }
 }
 
 // --- Edit: Name ---
@@ -855,6 +908,7 @@ function buildHotelContent(hotel, hotelGuests) {
           ? entries.map(({ rsvp: r, cnt }) => `
               <div class="room-guest-row">
                 <span class="room-guest-name">${esc(r.name)}</span>
+                ${r.family ? `<span class="family-badge ${r.family === 'Narahari' ? 'family-badge-N' : 'family-badge-R'}">${r.family[0]}</span>` : ''}
                 <span class="room-guest-detail">${cnt}${cnt !== +r.guests ? ' of ' + r.guests : ''} guest${cnt !== 1 ? 's' : ''}</span>
                 ${r.transportation ? '<span class="room-guest-detail" style="color:#2a6b2a">🚌</span>' : ''}
                 <button class="remove-from-room" onclick="removeFromRoom(${rm.id},${r.id})" title="Remove">✕</button>
@@ -1072,6 +1126,7 @@ function openAddRSVP() {
   document.getElementById('ar-type').value = '';
   document.getElementById('ar-transport').checked = false;
   document.querySelectorAll('.ar-accom').forEach(cb => cb.checked = false);
+  document.getElementById('ar-family').value = '';
   document.getElementById('ar-submit').disabled = false;
   document.getElementById('addRsvpModal').classList.add('open');
   setTimeout(() => document.getElementById('ar-name').focus(), 50);
@@ -1091,6 +1146,7 @@ async function submitAddRSVP() {
   const type = document.getElementById('ar-type').value || null;
   const accom = [...document.querySelectorAll('.ar-accom:checked')].map(cb => cb.value);
   const transportation = document.getElementById('ar-transport').checked;
+  const family = document.getElementById('ar-family').value || null;
 
   const btn = document.getElementById('ar-submit');
   btn.disabled = true;
@@ -1105,7 +1161,7 @@ async function submitAddRSVP() {
         'Content-Type': 'application/json',
         'Prefer': 'return=representation'
       },
-      body: JSON.stringify({ name, guests, events, type, accommodation: accom.length ? accom : null, transportation })
+      body: JSON.stringify({ name, guests, events, type, accommodation: accom.length ? accom : null, transportation, family })
     });
     if (!res.ok) throw new Error(await res.text());
     const [newRow] = await res.json();
@@ -1139,13 +1195,14 @@ function downloadCSV(filename, rows) {
 }
 
 function exportRSVPs() {
-  const header = ['Name','Guests','Events','Invite Type','Accommodation','Transport','Submitted Date'];
+  const header = ['Name','Guests','Events','Invite Type','Accommodation','Family','Transport','Submitted Date'];
   const rows = allRows.map(r => [
     r.name,
     r.guests,
     Array.isArray(r.events) ? r.events.join('; ') : (r.events || ''),
     r.type || '',
     Array.isArray(r.accommodation) ? r.accommodation.join('; ') : (r.accommodation || ''),
+    r.family || '',
     r.transportation ? 'Yes' : 'No',
     r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
   ]);
