@@ -177,6 +177,12 @@ footer .fb .amp{font-family:"Tangerine",cursive;font-size:2rem;vertical-align:-.
         </div>
       </div>
 
+      <div class="field" style="border-top:1px solid rgba(244,234,210,.15);padding-top:.5rem">
+        <label style="display:flex;align-items:center;gap:.65rem;cursor:pointer;user-select:none">
+          <input type="checkbox" id="cannotAttend" style="width:16px;height:16px;accent-color:#F0B45A;cursor:pointer;flex-shrink:0">
+          <span style="font-family:'Jost',sans-serif;font-size:.85rem;color:#D8E2CE">I unfortunately cannot attend</span>
+        </label>
+      </div>
       <button type="submit" class="submit"><span class="spinner"></span><span class="btn-label">Send our RSVP</span></button>
       <p class="err" id="err" role="alert"></p>
     </form>
@@ -257,12 +263,19 @@ async function saveRSVPs(list){try{if(typeof window.storage==='undefined')return
 
 const form=document.getElementById('rsvpForm'),thanks=document.getElementById('thanks'),
   err=document.getElementById('err'),nameEl=document.getElementById('name');
+const cannotCb=document.getElementById('cannotAttend');
+const guestField=document.querySelector('#rsvpForm .field:nth-child(2)');
+cannotCb.addEventListener('change',()=>{
+  guestField.style.display=cannotCb.checked?'none':'';
+  form.querySelector('.btn-label').textContent=cannotCb.checked?"We'll miss you!":'Send our RSVP';
+});
 form.addEventListener('submit',async ev=>{
   ev.preventDefault();
   const name=nameEl.value.trim();
   if(!name){err.textContent='Please add your name so we know who to expect.';nameEl.focus();return;}
   err.textContent='';
-  const record={name,guests,events,type:'wedding_full',when:new Date().toISOString()};
+  const cannot_attend=cannotCb.checked;
+  const record={name,guests:cannot_attend?0:guests,events,type:'wedding_full',cannot_attend,when:new Date().toISOString()};
   const submitBtn=form.querySelector('.submit');
   submitBtn.disabled=true;submitBtn.classList.add('loading');submitBtn.querySelector('.btn-label').textContent='Sending\u2026';
   try{
