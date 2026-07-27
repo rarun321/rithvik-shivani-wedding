@@ -432,6 +432,7 @@
         <option value="">All</option>
         <option value="Narahari">Narahari</option>
         <option value="Rajaraman">Rajaraman</option>
+        <option value="__none__">Not assigned</option>
       </select>
     </div>
     <div class="filter-group" style="position:relative">
@@ -638,7 +639,8 @@ function applyFilters() {
   const filtered = allRows.filter(r => {
     if (search && !r.name?.toLowerCase().includes(search)) return false;
     if (evFilt && r.events !== evFilt) return false;
-    if (famFilt && r.family !== famFilt) return false;
+    if (famFilt === '__none__' && r.family) return false;
+    if (famFilt && famFilt !== '__none__' && r.family !== famFilt) return false;
     if (attendFilt === 'attending' && r.cannot_attend) return false;
     if (attendFilt === 'cannot' && !r.cannot_attend) return false;
     if (accomFilts.length) {
