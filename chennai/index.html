@@ -243,7 +243,7 @@ const cannotCb=document.getElementById('cannotAttend');
 const guestField=document.querySelector('#rsvpForm .field:nth-child(2)');
 cannotCb.addEventListener('change',()=>{
   guestField.style.display=cannotCb.checked?'none':'';
-  form.querySelector('.btn-label').textContent=cannotCb.checked?'We'll miss you!':'Send our RSVP';
+  form.querySelector('.btn-label').textContent=cannotCb.checked?"We'll miss you!":'Send our RSVP';
 });
 form.addEventListener('submit',async ev=>{
   ev.preventDefault();
