@@ -288,6 +288,27 @@
   .family-badge-N { background: #e8f0ff; color: #1a3a8f; }
   .family-badge-R { background: #fff3e8; color: #8f4a00; }
 
+  /* Cannot attend */
+  tr.cannot-attend td { opacity: .45; }
+  tr.cannot-attend td:first-child::before {
+    content: '✗ '; color: #c00; font-weight: 700;
+  }
+  .cant-cb { width: 16px; height: 16px; cursor: pointer; accent-color: #c00; }
+
+  /* Stats family toggle */
+  .stats-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .75rem; }
+  .stats-header-label { font-size: .8rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: .05em; }
+  .family-toggle { display: flex; gap: 0; border: 1px solid #e0e0e0; border-radius: 7px; overflow: hidden; }
+  .family-toggle-btn {
+    padding: .3rem .85rem; font-size: .8rem; border: none; background: none;
+    cursor: pointer; color: #888; transition: background .12s, color .12s;
+  }
+  .family-toggle-btn:not(:last-child) { border-right: 1px solid #e0e0e0; }
+  .family-toggle-btn:hover { background: #f5f5f5; }
+  .family-toggle-btn.active { background: #23150a; color: #fff; font-weight: 600; }
+  .family-toggle-btn.active-N { background: #1a3a8f; color: #fff; font-weight: 600; }
+  .family-toggle-btn.active-R { background: #8f4a00; color: #fff; font-weight: 600; }
+
   /* Add RSVP Modal */
   .modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45);
@@ -366,6 +387,14 @@
   <div class="tab-panel active" id="tab-rsvps">
 
   <!-- Stats -->
+  <div class="stats-header">
+    <span class="stats-header-label">Overview</span>
+    <div class="family-toggle">
+      <button class="family-toggle-btn active" id="ftAll" onclick="setStatFamily('')">All</button>
+      <button class="family-toggle-btn" id="ftN" onclick="setStatFamily('Narahari')">Narahari</button>
+      <button class="family-toggle-btn" id="ftR" onclick="setStatFamily('Rajaraman')">Rajaraman</button>
+    </div>
+  </div>
   <div class="stats">
     <div class="stat"><div class="stat-val" id="statTotal">—</div><div class="stat-label">Responses</div></div>
     <div class="stat"><div class="stat-val" id="statGuests">—</div><div class="stat-label">Total Guests</div></div>
@@ -387,6 +416,14 @@
         <option value="hyderabad">Hyderabad</option>
         <option value="chennai">Chennai</option>
         <option value="sangeet">Sangeet</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="filterAttending">Attending</label>
+      <select id="filterAttending">
+        <option value="">All</option>
+        <option value="attending">Attending</option>
+        <option value="cannot">Cannot Attend</option>
       </select>
     </div>
     <div class="filter-group">
@@ -430,12 +467,13 @@
           <th>Accommodation</th>
           <th>Family</th>
           <th>Transport</th>
+          <th>Cannot Attend</th>
           <th>Submitted</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="loading-row"><td colspan="10">Loading…</td></tr>
+        <tr class="loading-row"><td colspan="11">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -545,7 +583,7 @@ pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); })
 
 // --- Data ---
 async function loadRSVPs() {
-  setTbody('<tr class="loading-row"><td colspan="10">Loading…</td></tr>');
+  setTbody('<tr class="loading-row"><td colspan="11">Loading…</td></tr>');
   try {
     const rsvpRes = await fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
       headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
@@ -555,7 +593,7 @@ async function loadRSVPs() {
     renderStats(allRows);
     applyFilters();
   } catch(e) {
-    setTbody(`<tr class="loading-row"><td colspan="10">Error: ${e.message}</td></tr>`);
+    setTbody(`<tr class="loading-row"><td colspan="11">Error: ${e.message}</td></tr>`);
   }
   // Load rooms separately — don't break RSVP tab if table missing
   try {
@@ -568,11 +606,22 @@ async function loadRSVPs() {
 document.getElementById('refreshBtn').onclick = loadRSVPs;
 
 // --- Stats ---
+let statFamilyFilter = '';
+
+function setStatFamily(fam) {
+  statFamilyFilter = fam;
+  document.getElementById('ftAll').className = 'family-toggle-btn' + (fam === '' ? ' active' : '');
+  document.getElementById('ftN').className   = 'family-toggle-btn' + (fam === 'Narahari'  ? ' active-N' : '');
+  document.getElementById('ftR').className   = 'family-toggle-btn' + (fam === 'Rajaraman' ? ' active-R' : '');
+  renderStats(allRows);
+}
+
 function renderStats(rows) {
-  const guests = rows.reduce((s, r) => s + (+r.guests || 0), 0);
-  const hyd = rows.filter(r => r.events === 'hyderabad' || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
-  const che = rows.filter(r => r.events === 'chennai'   || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
-  document.getElementById('statTotal').textContent  = rows.length;
+  const filtered = statFamilyFilter ? rows.filter(r => r.family === statFamilyFilter) : rows;
+  const guests = filtered.reduce((s, r) => s + (+r.guests || 0), 0);
+  const hyd = filtered.filter(r => r.events === 'hyderabad' || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
+  const che = filtered.filter(r => r.events === 'chennai'   || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
+  document.getElementById('statTotal').textContent  = filtered.length;
   document.getElementById('statGuests').textContent = guests;
   document.getElementById('statHyd').textContent    = hyd;
   document.getElementById('statChe').textContent    = che;
@@ -582,13 +631,16 @@ function renderStats(rows) {
 function applyFilters() {
   const search    = document.getElementById('searchInput').value.toLowerCase();
   const evFilt    = document.getElementById('filterEvents').value;
-  const famFilt   = document.getElementById('filterFamily').value;
+  const famFilt      = document.getElementById('filterFamily').value;
+  const attendFilt   = document.getElementById('filterAttending').value;
   const accomFilts = [...document.querySelectorAll('.accom-filter-cb:checked')].map(cb => cb.value);
 
   const filtered = allRows.filter(r => {
     if (search && !r.name?.toLowerCase().includes(search)) return false;
     if (evFilt && r.events !== evFilt) return false;
     if (famFilt && r.family !== famFilt) return false;
+    if (attendFilt === 'attending' && r.cannot_attend) return false;
+    if (attendFilt === 'cannot' && !r.cannot_attend) return false;
     if (accomFilts.length) {
       const hasNone  = accomFilts.includes('__none__');
       const venues   = accomFilts.filter(v => v !== '__none__');
@@ -604,14 +656,14 @@ function applyFilters() {
     filtered.length === allRows.length ? `${allRows.length} responses` : `${filtered.length} of ${allRows.length}`;
 
   if (!filtered.length) {
-    setTbody('<tr><td colspan="10" class="empty">No matching responses.</td></tr>');
+    setTbody('<tr><td colspan="11" class="empty">No matching responses.</td></tr>');
     return;
   }
 
   setTbody(filtered.map((r, i) => buildRow(r, i + 1)).join(''));
 }
 
-['searchInput','filterEvents','filterFamily'].forEach(id =>
+['searchInput','filterEvents','filterFamily','filterAttending'].forEach(id =>
   document.getElementById(id).addEventListener('input', applyFilters)
 );
 
@@ -638,7 +690,7 @@ function buildRow(r, i) {
   const accomDisplay = r.accommodation?.length
     ? r.accommodation.map(a => `<span style="background:#f0f0f0;padding:.1rem .4rem;border-radius:4px;font-size:.78rem;white-space:nowrap">${esc(a)}</span>`).join(' ')
     : '<span style="color:#bbb">—</span>';
-  return `<tr data-id="${r.id}">
+  return `<tr data-id="${r.id}" class="${r.cannot_attend ? 'cannot-attend' : ''}">`+`
     <td style="color:#aaa">${i}</td>
     <td><div class="editable-cell" id="nc-${r.id}"><span class="editable-val" onclick="editName(${r.id})">${esc(r.name)}</span></div></td>
     <td><div class="editable-cell" id="gc-${r.id}"><span class="editable-val" onclick="editGuests(${r.id})">${r.guests ?? '—'}</span></div></td>
@@ -656,6 +708,7 @@ function buildRow(r, i) {
       </div>
     </td>
     <td style="text-align:center"><input type="checkbox" class="transport-cb" ${r.transportation ? 'checked' : ''} onchange="saveField(${r.id},'transportation',this.checked)"></td>
+    <td style="text-align:center"><input type="checkbox" class="cant-cb" ${r.cannot_attend ? 'checked' : ''} onchange="saveCannotAttend(${r.id},this)"></td>
     <td style="color:#888;font-size:.8rem">${date}</td>
     <td><button class="del-btn" onclick="deleteRow(${r.id},this)">Delete</button></td>
   </tr>`;
@@ -675,6 +728,15 @@ async function patchRow(id, fields) {
 async function saveField(id, field, value) {
   try { await patchRow(id, { [field]: value }); renderStats(allRows); }
   catch(e) { alert('Update failed: ' + e.message); }
+}
+
+async function saveCannotAttend(id, cb) {
+  const val = cb.checked;
+  try {
+    await patchRow(id, { cannot_attend: val });
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (row) row.className = val ? 'cannot-attend' : '';
+  } catch(e) { alert('Update failed: ' + e.message); cb.checked = !val; }
 }
 
 async function saveFamily(id, value) {
@@ -1195,7 +1257,7 @@ function downloadCSV(filename, rows) {
 }
 
 function exportRSVPs() {
-  const header = ['Name','Guests','Events','Invite Type','Accommodation','Family','Transport','Submitted Date'];
+  const header = ['Name','Guests','Events','Invite Type','Accommodation','Family','Transport','Cannot Attend','Submitted Date'];
   const rows = allRows.map(r => [
     r.name,
     r.guests,
@@ -1204,6 +1266,7 @@ function exportRSVPs() {
     Array.isArray(r.accommodation) ? r.accommodation.join('; ') : (r.accommodation || ''),
     r.family || '',
     r.transportation ? 'Yes' : 'No',
+    r.cannot_attend ? 'Yes' : 'No',
     r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
   ]);
   downloadCSV('rsvps.csv', [header, ...rows]);
