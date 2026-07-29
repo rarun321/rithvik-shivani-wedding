@@ -462,6 +462,7 @@
         <tr>
           <th>#</th>
           <th>Name</th>
+          <th>Mobile</th>
           <th>Guests</th>
           <th>Events</th>
           <th>Invite Type</th>
@@ -474,7 +475,7 @@
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="loading-row"><td colspan="11">Loading…</td></tr>
+        <tr class="loading-row"><td colspan="12">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -503,6 +504,10 @@
     <div class="modal-field">
       <label>Name *</label>
       <input type="text" id="ar-name" placeholder="Full name">
+    </div>
+    <div class="modal-field">
+      <label>Mobile</label>
+      <input type="tel" id="ar-phone" placeholder="+91 …">
     </div>
     <div class="modal-field">
       <label>Guests *</label>
@@ -584,7 +589,7 @@ pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); })
 
 // --- Data ---
 async function loadRSVPs() {
-  setTbody('<tr class="loading-row"><td colspan="11">Loading…</td></tr>');
+  setTbody('<tr class="loading-row"><td colspan="12">Loading…</td></tr>');
   try {
     const rsvpRes = await fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
       headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
@@ -594,7 +599,7 @@ async function loadRSVPs() {
     renderStats(allRows);
     applyFilters();
   } catch(e) {
-    setTbody(`<tr class="loading-row"><td colspan="11">Error: ${e.message}</td></tr>`);
+    setTbody(`<tr class="loading-row"><td colspan="12">Error: ${e.message}</td></tr>`);
   }
   // Load rooms separately — don't break RSVP tab if table missing
   try {
@@ -658,7 +663,7 @@ function applyFilters() {
     filtered.length === allRows.length ? `${allRows.length} responses` : `${filtered.length} of ${allRows.length}`;
 
   if (!filtered.length) {
-    setTbody('<tr><td colspan="11" class="empty">No matching responses.</td></tr>');
+    setTbody('<tr><td colspan="12" class="empty">No matching responses.</td></tr>');
     return;
   }
 
@@ -695,6 +700,7 @@ function buildRow(r, i) {
   return `<tr data-id="${r.id}" class="${r.cannot_attend ? 'cannot-attend' : ''}">`+`
     <td style="color:#aaa">${i}</td>
     <td><div class="editable-cell" id="nc-${r.id}"><span class="editable-val" onclick="editName(${r.id})">${esc(r.name)}</span></div></td>
+    <td><div class="editable-cell" id="pc-${r.id}"><span class="editable-val" onclick="editPhone(${r.id})">${r.phone ? esc(r.phone) : '<span style="color:#bbb">—</span>'}</span></div></td>
     <td><div class="editable-cell" id="gc-${r.id}"><span class="editable-val" onclick="editGuests(${r.id})">${r.guests ?? '—'}</span></div></td>
     <td>${evBadgeHtml(r.events)}</td>
     <td>${typeBadgeHtml(r.type)}</td>
@@ -770,6 +776,33 @@ async function saveName(id) {
 function cancelName(id) {
   const row = allRows.find(r => r.id === id);
   document.getElementById('nc-' + id).innerHTML = `<span class="editable-val" onclick="editName(${id})">${esc(row.name)}</span>`;
+}
+
+// --- Edit: Phone ---
+function editPhone(id) {
+  const row = allRows.find(r => r.id === id);
+  const cell = document.getElementById('pc-' + id);
+  cell.innerHTML = `<input class="edit-input" type="tel" id="pi-${id}" value="${esc(row.phone || '')}" placeholder="+91 …">
+    <button class="save-btn" onclick="savePhone(${id})">Save</button>
+    <button class="cancel-btn" onclick="cancelPhone(${id})">Cancel</button>`;
+  document.getElementById('pi-' + id).focus();
+}
+async function savePhone(id) {
+  const input = document.getElementById('pi-' + id);
+  const val = input.value.trim();
+  const btn = input.nextElementSibling; btn.disabled = true;
+  try {
+    await patchRow(id, { phone: val || null });
+    document.getElementById('pc-' + id).innerHTML = val
+      ? `<span class="editable-val" onclick="editPhone(${id})">${esc(val)}</span>`
+      : `<span class="editable-val" onclick="editPhone(${id})"><span style="color:#bbb">—</span></span>`;
+  } catch(e) { alert('Update failed: ' + e.message); btn.disabled = false; }
+}
+function cancelPhone(id) {
+  const row = allRows.find(r => r.id === id);
+  document.getElementById('pc-' + id).innerHTML = row.phone
+    ? `<span class="editable-val" onclick="editPhone(${id})">${esc(row.phone)}</span>`
+    : `<span class="editable-val" onclick="editPhone(${id})"><span style="color:#bbb">—</span></span>`;
 }
 
 // --- Edit: Guests ---
@@ -1185,6 +1218,7 @@ async function saveRoomType(id, value) {
 // --- Add RSVP Modal ---
 function openAddRSVP() {
   document.getElementById('ar-name').value = '';
+  document.getElementById('ar-phone').value = '';
   document.getElementById('ar-guests').value = '1';
   document.getElementById('ar-events').value = '';
   document.getElementById('ar-type').value = '';
@@ -1211,6 +1245,7 @@ async function submitAddRSVP() {
   const accom = [...document.querySelectorAll('.ar-accom:checked')].map(cb => cb.value);
   const transportation = document.getElementById('ar-transport').checked;
   const family = document.getElementById('ar-family').value || null;
+  const phone = document.getElementById('ar-phone').value.trim() || null;
 
   const btn = document.getElementById('ar-submit');
   btn.disabled = true;
@@ -1225,7 +1260,7 @@ async function submitAddRSVP() {
         'Content-Type': 'application/json',
         'Prefer': 'return=representation'
       },
-      body: JSON.stringify({ name, guests, events, type, accommodation: accom.length ? accom : null, transportation, family })
+      body: JSON.stringify({ name, phone, guests, events, type, accommodation: accom.length ? accom : null, transportation, family })
     });
     if (!res.ok) throw new Error(await res.text());
     const [newRow] = await res.json();
@@ -1259,9 +1294,10 @@ function downloadCSV(filename, rows) {
 }
 
 function exportRSVPs() {
-  const header = ['Name','Guests','Events','Invite Type','Accommodation','Family','Transport','Cannot Attend','Submitted Date'];
+  const header = ['Name','Mobile','Guests','Events','Invite Type','Accommodation','Family','Transport','Cannot Attend','Submitted Date'];
   const rows = allRows.map(r => [
     r.name,
+    r.phone || '',
     r.guests,
     Array.isArray(r.events) ? r.events.join('; ') : (r.events || ''),
     r.type || '',
