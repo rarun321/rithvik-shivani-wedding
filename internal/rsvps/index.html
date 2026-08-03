@@ -427,6 +427,16 @@
       </select>
     </div>
     <div class="filter-group">
+      <label for="filterRelation">Relation</label>
+      <select id="filterRelation">
+        <option value="">All</option>
+        <option value="Family">Family</option>
+        <option value="Friends">Friends</option>
+        <option value="Colleague">Colleague</option>
+        <option value="__none__">Not assigned</option>
+      </select>
+    </div>
+    <div class="filter-group">
       <label for="filterFamily">Family</label>
       <select id="filterFamily">
         <option value="">All</option>
@@ -468,6 +478,7 @@
           <th>Events</th>
           <th>Invite Type</th>
           <th>Accommodation</th>
+          <th>Relation</th>
           <th>Family</th>
           <th>Transport</th>
           <th>Cannot Attend</th>
@@ -476,7 +487,7 @@
         </tr>
       </thead>
       <tbody id="tbody">
-        <tr class="loading-row"><td colspan="12">Loading…</td></tr>
+        <tr class="loading-row"><td colspan="13">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -546,6 +557,15 @@
       </div>
     </div>
     <div class="modal-field">
+      <label>Relation</label>
+      <select id="ar-relation">
+        <option value="">None</option>
+        <option value="Family">Family</option>
+        <option value="Friends">Friends</option>
+        <option value="Colleague">Colleague</option>
+      </select>
+    </div>
+    <div class="modal-field">
       <label>Family</label>
       <select id="ar-family">
         <option value="">None</option>
@@ -591,7 +611,7 @@ pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); })
 
 // --- Data ---
 async function loadRSVPs() {
-  setTbody('<tr class="loading-row"><td colspan="12">Loading…</td></tr>');
+  setTbody('<tr class="loading-row"><td colspan="13">Loading…</td></tr>');
   try {
     const rsvpRes = await fetch(SUPABASE_URL + '/rest/v1/rsvps?select=*&order=created_at.desc', {
       headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
@@ -601,7 +621,7 @@ async function loadRSVPs() {
     renderStats(allRows);
     applyFilters();
   } catch(e) {
-    setTbody(`<tr class="loading-row"><td colspan="12">Error: ${e.message}</td></tr>`);
+    setTbody(`<tr class="loading-row"><td colspan="13">Error: ${e.message}</td></tr>`);
   }
   // Load rooms separately — don't break RSVP tab if table missing
   try {
@@ -639,6 +659,7 @@ function renderStats(rows) {
 function applyFilters() {
   const search    = document.getElementById('searchInput').value.toLowerCase();
   const evFilt    = document.getElementById('filterEvents').value;
+  const relationFilt = document.getElementById('filterRelation').value;
   const famFilt      = document.getElementById('filterFamily').value;
   const attendFilt   = document.getElementById('filterAttending').value;
   const accomFilts = [...document.querySelectorAll('.accom-filter-cb:checked')].map(cb => cb.value);
@@ -646,6 +667,8 @@ function applyFilters() {
   const filtered = allRows.filter(r => {
     if (search && !r.name?.toLowerCase().includes(search)) return false;
     if (evFilt && r.events !== evFilt) return false;
+    if (relationFilt === '__none__' && r.relation) return false;
+    if (relationFilt && relationFilt !== '__none__' && r.relation !== relationFilt) return false;
     if (famFilt === '__none__' && r.family) return false;
     if (famFilt && famFilt !== '__none__' && r.family !== famFilt) return false;
     if (attendFilt === 'attending' && r.cannot_attend) return false;
@@ -665,14 +688,14 @@ function applyFilters() {
     filtered.length === allRows.length ? `${allRows.length} responses` : `${filtered.length} of ${allRows.length}`;
 
   if (!filtered.length) {
-    setTbody('<tr><td colspan="12" class="empty">No matching responses.</td></tr>');
+    setTbody('<tr><td colspan="13" class="empty">No matching responses.</td></tr>');
     return;
   }
 
   setTbody(filtered.map((r, i) => buildRow(r, i + 1)).join(''));
 }
 
-['searchInput','filterEvents','filterFamily','filterAttending'].forEach(id =>
+['searchInput','filterEvents','filterRelation','filterFamily','filterAttending'].forEach(id =>
   document.getElementById(id).addEventListener('input', applyFilters)
 );
 
@@ -707,6 +730,7 @@ function buildRow(r, i) {
     <td>${evBadgeHtml(r.events)}</td>
     <td>${typeBadgeHtml(r.type)}</td>
     <td><div class="editable-cell" id="ac-${r.id}"><span class="editable-val" onclick="editAccom(${r.id})">${accomDisplay}</span></div></td>
+    <td><div class="editable-cell" id="rc-${r.id}"><span class="editable-val" onclick="editRelation(${r.id})">${r.relation ? esc(r.relation) : '<span style="color:#bbb">—</span>'}</span></div></td>
     <td>
       <div class="family-radios">
         ${['Narahari','Rajaraman'].map(f => `
@@ -805,6 +829,32 @@ function cancelPhone(id) {
   document.getElementById('pc-' + id).innerHTML = row.phone
     ? `<span class="editable-val" onclick="editPhone(${id})">${esc(row.phone)}</span>`
     : `<span class="editable-val" onclick="editPhone(${id})"><span style="color:#bbb">—</span></span>`;
+}
+
+// --- Edit: Relation ---
+function editRelation(id) {
+  const row = allRows.find(r => r.id === id);
+  const cell = document.getElementById('rc-' + id);
+  cell.innerHTML = `<select class="assign-select" id="ri-${id}" onchange="saveRelation(${id},this.value)">
+    <option value="">—</option>
+    ${['Family','Friends','Colleague'].map(v => `<option value="${v}" ${row.relation === v ? 'selected' : ''}>${v}</option>`).join('')}
+  </select>
+  <button class="cancel-btn" onclick="cancelRelation(${id})">Cancel</button>`;
+  document.getElementById('ri-' + id).focus();
+}
+async function saveRelation(id, val) {
+  try {
+    await patchRow(id, { relation: val || null });
+    document.getElementById('rc-' + id).innerHTML = val
+      ? `<span class="editable-val" onclick="editRelation(${id})">${esc(val)}</span>`
+      : `<span class="editable-val" onclick="editRelation(${id})"><span style="color:#bbb">—</span></span>`;
+  } catch(e) { alert('Update failed: ' + e.message); }
+}
+function cancelRelation(id) {
+  const row = allRows.find(r => r.id === id);
+  document.getElementById('rc-' + id).innerHTML = row.relation
+    ? `<span class="editable-val" onclick="editRelation(${id})">${esc(row.relation)}</span>`
+    : `<span class="editable-val" onclick="editRelation(${id})"><span style="color:#bbb">—</span></span>`;
 }
 
 // --- Edit: Guests ---
@@ -1244,6 +1294,7 @@ function openAddRSVP() {
   document.getElementById('ar-type').value = '';
   document.getElementById('ar-transport').checked = false;
   document.querySelectorAll('.ar-accom').forEach(cb => cb.checked = false);
+  document.getElementById('ar-relation').value = '';
   document.getElementById('ar-family').value = '';
   document.getElementById('ar-submit').disabled = false;
   document.getElementById('addRsvpModal').classList.add('open');
@@ -1264,6 +1315,7 @@ async function submitAddRSVP() {
   const type = document.getElementById('ar-type').value || null;
   const accom = [...document.querySelectorAll('.ar-accom:checked')].map(cb => cb.value);
   const transportation = document.getElementById('ar-transport').checked;
+  const relation = document.getElementById('ar-relation').value || null;
   const family = document.getElementById('ar-family').value || null;
   const phone = document.getElementById('ar-phone').value.trim() || null;
 
@@ -1280,7 +1332,7 @@ async function submitAddRSVP() {
         'Content-Type': 'application/json',
         'Prefer': 'return=representation'
       },
-      body: JSON.stringify({ name, phone, guests, events, type, accommodation: accom.length ? accom : null, transportation, family })
+      body: JSON.stringify({ name, phone, guests, events, type, accommodation: accom.length ? accom : null, transportation, relation, family })
     });
     if (!res.ok) throw new Error(await res.text());
     const [newRow] = await res.json();
@@ -1314,7 +1366,7 @@ function downloadCSV(filename, rows) {
 }
 
 function exportRSVPs() {
-  const header = ['Name','Mobile','Guests','Events','Invite Type','Accommodation','Family','Transport','Cannot Attend','Submitted Date'];
+  const header = ['Name','Mobile','Guests','Events','Invite Type','Accommodation','Relation','Family','Transport','Cannot Attend','Submitted Date'];
   const rows = allRows.map(r => [
     r.name,
     r.phone || '',
@@ -1322,6 +1374,7 @@ function exportRSVPs() {
     Array.isArray(r.events) ? r.events.join('; ') : (r.events || ''),
     r.type || '',
     Array.isArray(r.accommodation) ? r.accommodation.join('; ') : (r.accommodation || ''),
+    r.relation || '',
     r.family || '',
     r.transportation ? 'Yes' : 'No',
     r.cannot_attend ? 'Yes' : 'No',
