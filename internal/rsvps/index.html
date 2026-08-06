@@ -1059,7 +1059,7 @@ function buildHotelContent(hotel, hotelGuests) {
         <span style="font-size:1.2rem;font-weight:700;color:#23150a">${sizeCounts[n] || 0}<span style="font-size:.8rem;font-weight:400;color:#aaa"> / ${sizeCapacity[n]}</span></span>
         <span style="font-size:.72rem;color:#888">${n}-person rooms</span>
       </div>`).join('');
-    const floorCapacity = {'1st Floor':14,'2nd Floor':27,'3rd Floor':28,'4th Floor':57};
+    const floorCapacity = {'1st Floor':17,'2nd Floor':27,'3rd Floor':27,'4th Floor':57};
     const floorPills = ['1st Floor','2nd Floor','3rd Floor','4th Floor'].map(f => `
       <div style="display:inline-flex;flex-direction:column;align-items:center;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:8px;padding:.4rem .9rem;min-width:70px">
         <span style="font-size:1.2rem;font-weight:700;color:#23150a">${floorCounts[f] || 0}<span style="font-size:.8rem;font-weight:400;color:#aaa"> / ${floorCapacity[f]}</span></span>
