@@ -1421,7 +1421,7 @@ function exportRSVPs() {
 }
 
 function exportAccommodation() {
-  const header = ['Hotel','Room','Room Number','Room Type','Guest Name','Guests Assigned','Transport'];
+  const header = ['Hotel','Room','Room Number','Floor','Room Type','Guest Name','Guests Assigned','Transport'];
   const rows = [];
   const hotels = [...new Set(allRooms.map(r => r.hotel))];
   for (const hotel of hotels) {
@@ -1430,7 +1430,7 @@ function exportAccommodation() {
       const asgn = assignmentsOf(rm);
       const entries = Object.entries(asgn);
       if (entries.length === 0) {
-        rows.push([hotel, rm.label, rm.room_number || '', rm.room_type || '', '', '', '']);
+        rows.push([hotel, rm.label, rm.room_number || '', rm.floor || '', rm.room_type || '', '', '', '']);
       } else {
         for (const [rsvpId, count] of entries) {
           const rsvp = allRows.find(r => r.id === parseInt(rsvpId));
@@ -1438,6 +1438,7 @@ function exportAccommodation() {
             hotel,
             rm.label,
             rm.room_number || '',
+            rm.floor || '',
             rm.room_type || '',
             rsvp ? rsvp.name : 'Unknown',
             count,
