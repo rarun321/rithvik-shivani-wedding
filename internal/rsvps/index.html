@@ -503,6 +503,23 @@
       </div>
     </div>
     <div class="stats" id="accomStats" style="margin-bottom:1.5rem"></div>
+    <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem">
+      <input type="search" id="accomSearch" placeholder="Search guest or room…"
+        style="flex:1;min-width:160px;padding:.5rem .75rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem"
+        oninput="renderAccomTab()">
+      <select id="accomFloorFilter" style="padding:.5rem .75rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem" onchange="renderAccomTab()">
+        <option value="">All floors</option>
+        <option value="1st Floor">1st Floor</option>
+        <option value="2nd Floor">2nd Floor</option>
+        <option value="3rd Floor">3rd Floor</option>
+        <option value="4th Floor">4th Floor</option>
+      </select>
+      <select id="accomStatusFilter" style="padding:.5rem .75rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem" onchange="renderAccomTab()">
+        <option value="">All rooms</option>
+        <option value="occupied">Occupied</option>
+        <option value="empty">Empty</option>
+      </select>
+    </div>
     <div class="hotel-tabs-bar" id="hotelTabsBar"></div>
     <div id="hotelTabContent"></div>
   </div>
@@ -1041,7 +1058,24 @@ function renderAccomTab() {
 }
 
 function buildHotelContent(hotel, hotelGuests) {
-  const hotelRooms = allRooms.filter(rm => rm.hotel === hotel);
+  const accomSearch = (document.getElementById('accomSearch')?.value || '').toLowerCase();
+  const floorFilt   = document.getElementById('accomFloorFilter')?.value || '';
+  const statusFilt  = document.getElementById('accomStatusFilter')?.value || '';
+
+  const allHotelRooms = allRooms.filter(rm => rm.hotel === hotel);
+  const hotelRooms = allHotelRooms.filter(rm => {
+    const occupied = Object.values(assignmentsOf(rm)).reduce((s,c) => s+c, 0) > 0;
+    const guestNames = Object.keys(assignmentsOf(rm)).map(rid => allRows.find(r => r.id === +rid)?.name?.toLowerCase() || '');
+    if (floorFilt && rm.floor !== floorFilt) return false;
+    if (statusFilt === 'occupied' && !occupied) return false;
+    if (statusFilt === 'empty' && occupied) return false;
+    if (accomSearch) {
+      const matchRoom = rm.label?.toLowerCase().includes(accomSearch) || (rm.room_number || '').toLowerCase().includes(accomSearch);
+      const matchGuest = guestNames.some(n => n.includes(accomSearch));
+      if (!matchRoom && !matchGuest) return false;
+    }
+    return true;
+  });
   const partialGuests = hotelGuests.filter(r => totalAssignedAtHotel(hotel, r.id) < (+r.guests || 0));
   const roomOptions = hotelRooms.map(rm => `<option value="${rm.id}">${esc(rm.label)}</option>`).join('');
 
