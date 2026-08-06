@@ -513,6 +513,7 @@
         <option value="2nd Floor">2nd Floor</option>
         <option value="3rd Floor">3rd Floor</option>
         <option value="4th Floor">4th Floor</option>
+        <option value="__none__">Not assigned</option>
       </select>
       <select id="accomStatusFilter" style="padding:.5rem .75rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem" onchange="renderAccomTab()">
         <option value="">All rooms</option>
@@ -1066,9 +1067,10 @@ function buildHotelContent(hotel, hotelGuests) {
   const hotelRooms = allHotelRooms.filter(rm => {
     const occupied = Object.values(assignmentsOf(rm)).reduce((s,c) => s+c, 0) > 0;
     const guestNames = Object.keys(assignmentsOf(rm)).map(rid => allRows.find(r => r.id === +rid)?.name?.toLowerCase() || '');
-    if (floorFilt && rm.floor !== floorFilt) return false;
-    if (statusFilt === 'occupied' && !occupied) return false;
-    if (statusFilt === 'empty' && occupied) return false;
+    if (floorFilt === '__none__' && rm.floor) return false;
+    if (floorFilt && floorFilt !== '__none__' && rm.floor !== floorFilt) return false;
+    if (statusFilt === 'occupied' && !rm.room_number) return false;
+    if (statusFilt === 'empty' && rm.room_number) return false;
     if (accomSearch) {
       const matchRoom = rm.label?.toLowerCase().includes(accomSearch) || (rm.room_number || '').toLowerCase().includes(accomSearch);
       const matchGuest = guestNames.some(n => n.includes(accomSearch));
