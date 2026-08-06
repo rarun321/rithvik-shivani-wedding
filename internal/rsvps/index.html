@@ -1311,6 +1311,7 @@ async function saveRoomFloor(id, value) {
   try {
     await apiRoom('PATCH', '?id=eq.' + id, { floor: value || null });
     allRooms = allRooms.map(r => r.id === id ? { ...r, floor: value || null } : r);
+    renderAccomTab();
   } catch(e) { alert('Failed to save floor: ' + e.message); }
 }
 
