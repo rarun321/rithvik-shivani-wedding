@@ -1094,6 +1094,10 @@ function buildHotelContent(hotel, hotelGuests) {
               <span class="room-label-val" onclick="startRenameRoom(${rm.id})" id="rl-${rm.id}" title="Click to rename">${esc(rm.label)}</span>
               ${totalInRoom > 0 ? `<span style="font-size:.75rem;color:#888">${totalInRoom} guest${totalInRoom !== 1 ? 's' : ''}</span>` : ''}
               ${roomTypeHtml}
+              <input type="text" class="edit-input" placeholder="Room no." value="${esc(rm.room_number || '')}"
+                style="max-width:80px;font-size:.75rem;padding:.25rem .4rem"
+                onchange="saveRoomNumber(${rm.id},this.value)"
+                title="Room number">
               <button class="room-del-btn" onclick="deleteRoomGroup(${rm.id})">Delete</button>
             </div>
             <div class="room-guests-list">${membersHtml}</div>
@@ -1278,6 +1282,13 @@ async function removeFromRoom(roomId, rsvpId) {
 }
 
 // Save room type (Sheraton only)
+async function saveRoomNumber(id, value) {
+  try {
+    await apiRoom('PATCH', '?id=eq.' + id, { room_number: value || null });
+    allRooms = allRooms.map(r => r.id === id ? { ...r, room_number: value || null } : r);
+  } catch(e) { alert('Failed to save room number: ' + e.message); }
+}
+
 async function saveRoomType(id, value) {
   try {
     await apiRoom('PATCH', '?id=eq.' + id, { room_type: value || null });
@@ -1384,7 +1395,7 @@ function exportRSVPs() {
 }
 
 function exportAccommodation() {
-  const header = ['Hotel','Room','Room Type','Guest Name','Guests Assigned','Transport'];
+  const header = ['Hotel','Room','Room Number','Room Type','Guest Name','Guests Assigned','Transport'];
   const rows = [];
   const hotels = [...new Set(allRooms.map(r => r.hotel))];
   for (const hotel of hotels) {
@@ -1393,13 +1404,14 @@ function exportAccommodation() {
       const asgn = assignmentsOf(rm);
       const entries = Object.entries(asgn);
       if (entries.length === 0) {
-        rows.push([hotel, rm.label, rm.room_type || '', '', '', '']);
+        rows.push([hotel, rm.label, rm.room_number || '', rm.room_type || '', '', '', '']);
       } else {
         for (const [rsvpId, count] of entries) {
           const rsvp = allRows.find(r => r.id === parseInt(rsvpId));
           rows.push([
             hotel,
             rm.label,
+            rm.room_number || '',
             rm.room_type || '',
             rsvp ? rsvp.name : 'Unknown',
             count,
