@@ -515,6 +515,12 @@
         <option value="4th Floor">4th Floor</option>
         <option value="__none__">Not assigned</option>
       </select>
+      <select id="accomGuestsFilter" style="padding:.5rem .75rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem" onchange="renderAccomTab()">
+        <option value="">All guests</option>
+        <option value="2">2 guests</option>
+        <option value="3">3 guests</option>
+        <option value="4">4 guests</option>
+      </select>
       <select id="accomStatusFilter" style="padding:.5rem .75rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem" onchange="renderAccomTab()">
         <option value="">All rooms</option>
         <option value="occupied">Occupied</option>
@@ -1059,9 +1065,10 @@ function renderAccomTab() {
 }
 
 function buildHotelContent(hotel, hotelGuests) {
-  const accomSearch = (document.getElementById('accomSearch')?.value || '').toLowerCase();
-  const floorFilt   = document.getElementById('accomFloorFilter')?.value || '';
-  const statusFilt  = document.getElementById('accomStatusFilter')?.value || '';
+  const accomSearch  = (document.getElementById('accomSearch')?.value || '').toLowerCase();
+  const floorFilt    = document.getElementById('accomFloorFilter')?.value || '';
+  const guestsFilt   = document.getElementById('accomGuestsFilter')?.value || '';
+  const statusFilt   = document.getElementById('accomStatusFilter')?.value || '';
 
   const allHotelRooms = allRooms.filter(rm => rm.hotel === hotel);
   const hotelRooms = allHotelRooms.filter(rm => {
@@ -1069,6 +1076,10 @@ function buildHotelContent(hotel, hotelGuests) {
     const guestNames = Object.keys(assignmentsOf(rm)).map(rid => allRows.find(r => r.id === +rid)?.name?.toLowerCase() || '');
     if (floorFilt === '__none__' && rm.floor) return false;
     if (floorFilt && floorFilt !== '__none__' && rm.floor !== floorFilt) return false;
+    if (guestsFilt) {
+      const totalInRoom = Object.values(assignmentsOf(rm)).reduce((s,c) => s+c, 0);
+      if (totalInRoom !== parseInt(guestsFilt)) return false;
+    }
     if (statusFilt === 'occupied' && !rm.room_number) return false;
     if (statusFilt === 'empty' && rm.room_number) return false;
     if (accomSearch) {
