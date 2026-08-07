@@ -515,6 +515,11 @@
         <option value="4th Floor">4th Floor</option>
         <option value="__none__">Not assigned</option>
       </select>
+      <select id="accomFamilyFilter" style="padding:.5rem .75rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem" onchange="renderAccomTab()">
+        <option value="">All families</option>
+        <option value="Narahari">Narahari</option>
+        <option value="Rajaraman">Rajaraman</option>
+      </select>
       <select id="accomGuestsFilter" style="padding:.5rem .75rem;border:1px solid #ddd;border-radius:7px;font-size:.9rem" onchange="renderAccomTab()">
         <option value="">All guests</option>
         <option value="2">2 guests</option>
@@ -1067,6 +1072,7 @@ function renderAccomTab() {
 function buildHotelContent(hotel, hotelGuests) {
   const accomSearch  = (document.getElementById('accomSearch')?.value || '').toLowerCase();
   const floorFilt    = document.getElementById('accomFloorFilter')?.value || '';
+  const familyFilt   = document.getElementById('accomFamilyFilter')?.value || '';
   const guestsFilt   = document.getElementById('accomGuestsFilter')?.value || '';
   const statusFilt   = document.getElementById('accomStatusFilter')?.value || '';
 
@@ -1076,6 +1082,10 @@ function buildHotelContent(hotel, hotelGuests) {
     const guestNames = Object.keys(assignmentsOf(rm)).map(rid => allRows.find(r => r.id === +rid)?.name?.toLowerCase() || '');
     if (floorFilt === '__none__' && rm.floor) return false;
     if (floorFilt && floorFilt !== '__none__' && rm.floor !== floorFilt) return false;
+    if (familyFilt) {
+      const roomRsvps = Object.keys(assignmentsOf(rm)).map(rid => allRows.find(r => r.id === +rid)).filter(Boolean);
+      if (!roomRsvps.some(r => r.family === familyFilt)) return false;
+    }
     if (guestsFilt) {
       const totalInRoom = Object.values(assignmentsOf(rm)).reduce((s,c) => s+c, 0);
       if (totalInRoom !== parseInt(guestsFilt)) return false;
