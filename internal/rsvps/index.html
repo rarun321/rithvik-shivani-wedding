@@ -1145,6 +1145,7 @@ function buildHotelContent(hotel, hotelGuests) {
           ? entries.map(({ rsvp: r, cnt }) => `
               <div class="room-guest-row">
                 <span class="room-guest-name">${esc(r.name)}</span>
+                ${r.phone ? `<span class="room-guest-detail" style="color:#555">📱 ${esc(r.phone)}</span>` : ''}
                 ${r.family ? `<span class="family-badge ${r.family === 'Narahari' ? 'family-badge-N' : 'family-badge-R'}">${r.family[0]}</span>` : ''}
                 <span class="room-guest-detail">${cnt}${cnt !== +r.guests ? ' of ' + r.guests : ''} guest${cnt !== 1 ? 's' : ''}</span>
                 ${r.transportation ? '<span class="room-guest-detail" style="color:#2a6b2a">🚌</span>' : ''}
@@ -1171,7 +1172,7 @@ function buildHotelContent(hotel, hotelGuests) {
               ${roomTypeHtml}
               <input type="text" class="edit-input" placeholder="Room no." value="${esc(rm.room_number || '')}"
                 style="max-width:80px;font-size:.75rem;padding:.25rem .4rem"
-                onchange="saveRoomNumber(${rm.id},this.value)"
+                onchange="saveRoomNumber(${rm.id},this.value,this)"
                 title="Room number">
               <button class="room-del-btn" onclick="deleteRoomGroup(${rm.id})">Delete</button>
             </div>
@@ -1357,10 +1358,20 @@ async function removeFromRoom(roomId, rsvpId) {
 }
 
 // Save room type (Sheraton only)
-async function saveRoomNumber(id, value) {
+async function saveRoomNumber(id, value, inputEl) {
+  const trimmed = value.trim();
+  if (trimmed) {
+    const thisRoom = allRooms.find(r => r.id === id);
+    const duplicate = allRooms.find(r => r.id !== id && r.hotel === thisRoom?.hotel && r.room_number === trimmed);
+    if (duplicate) {
+      alert(`Room number "${trimmed}" is already assigned to "${duplicate.label}". Please use a different number.`);
+      if (inputEl) inputEl.value = thisRoom?.room_number || '';
+      return;
+    }
+  }
   try {
-    await apiRoom('PATCH', '?id=eq.' + id, { room_number: value || null });
-    allRooms = allRooms.map(r => r.id === id ? { ...r, room_number: value || null } : r);
+    await apiRoom('PATCH', '?id=eq.' + id, { room_number: trimmed || null });
+    allRooms = allRooms.map(r => r.id === id ? { ...r, room_number: trimmed || null } : r);
   } catch(e) { alert('Failed to save room number: ' + e.message); }
 }
 
@@ -1478,7 +1489,7 @@ function exportRSVPs() {
 }
 
 function exportAccommodation() {
-  const header = ['Hotel','Room','Room Number','Floor','Room Type','Guest Name','Guests Assigned','Transport'];
+  const header = ['Hotel','Room','Room Number','Floor','Room Type','Guest Name','Mobile','Guests Assigned','Transport'];
   const rows = [];
   const hotels = [...new Set(allRooms.map(r => r.hotel))];
   for (const hotel of hotels) {
@@ -1487,7 +1498,7 @@ function exportAccommodation() {
       const asgn = assignmentsOf(rm);
       const entries = Object.entries(asgn);
       if (entries.length === 0) {
-        rows.push([hotel, rm.label, rm.room_number || '', rm.floor || '', rm.room_type || '', '', '', '']);
+        rows.push([hotel, rm.label, rm.room_number || '', rm.floor || '', rm.room_type || '', '', '', '', '']);
       } else {
         for (const [rsvpId, count] of entries) {
           const rsvp = allRows.find(r => r.id === parseInt(rsvpId));
@@ -1498,6 +1509,7 @@ function exportAccommodation() {
             rm.floor || '',
             rm.room_type || '',
             rsvp ? rsvp.name : 'Unknown',
+            rsvp?.phone || '',
             count,
             rsvp?.transportation ? 'Yes' : 'No'
           ]);
