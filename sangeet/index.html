@@ -259,7 +259,6 @@ form.addEventListener('submit',async ev=>{
     err.textContent='Sorry \u2014 that didn\u2019t send. Please check your connection and try again.';
     return;
   }
-  const cannot_attend=cannotCb.checked;
   submitBtn.disabled=false;submitBtn.querySelector('.btn-label').textContent=cannot_attend?"We'll miss you!":'Send our RSVP';
   document.getElementById('thanksMsg').textContent=cannot_attend
     ? name+', we\u2019re so sad you can\u2019t make it \u2014 you\u2019ll be missed!'
