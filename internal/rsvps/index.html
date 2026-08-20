@@ -870,6 +870,7 @@ async function saveCannotAttend(id, cb) {
     await patchRow(id, { cannot_attend: val });
     const row = document.querySelector(`tr[data-id="${id}"]`);
     if (row) row.className = val ? 'cannot-attend' : '';
+    renderStats(allRows);
   } catch(e) { alert('Update failed: ' + e.message); cb.checked = !val; }
 }
 
