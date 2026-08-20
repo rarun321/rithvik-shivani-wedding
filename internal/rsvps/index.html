@@ -295,6 +295,32 @@
   }
   .cant-cb { width: 16px; height: 16px; cursor: pointer; accent-color: #c00; }
 
+  /* Room Map */
+  .map-floor-btn { padding:.45rem 1rem;border:1px solid #ddd;border-radius:7px;font-size:.85rem;background:#fafafa;cursor:pointer;font-weight:500;color:#555; }
+  .map-floor-btn:hover { background:#f0ede8; }
+  .map-floor-btn.active { background:#23150a;color:#fff;border-color:#23150a; }
+  .map-section-label { font-size:.7rem;font-weight:700;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin:1.25rem 0 .4rem; }
+  .map-corridor { display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start; }
+  .map-corridor-pair { display:flex;flex-direction:column;gap:4px; }
+  .map-corridor-row { display:flex;gap:6px; }
+  .room-cell {
+    width:88px;min-height:62px;border-radius:7px;border:1px solid #ddd;background:#f5f5f5;
+    padding:5px 6px;cursor:pointer;transition:box-shadow .15s,transform .1s;
+    display:flex;flex-direction:column;gap:2px;position:relative;
+  }
+  .room-cell:hover { box-shadow:0 2px 8px rgba(0,0,0,.15);transform:translateY(-1px); }
+  .room-cell.assigned { background:#c8e6c9;border-color:#81c784; }
+  .room-cell.partial { background:#fff9c4;border-color:#f9a825; }
+  .room-cell.special { background:#e3f2fd;border-color:#90caf9; }
+  .room-cell-num { font-size:.72rem;font-weight:700;color:#555; }
+  .room-cell.assigned .room-cell-num { color:#2e7d32; }
+  .room-cell.partial .room-cell-num { color:#e65100; }
+  .room-cell-name { font-size:.65rem;color:#333;line-height:1.3;word-break:break-word; }
+  .room-cell-guests { font-size:.6rem;color:#888;margin-top:auto; }
+  .map-divider { width:2px;background:#e8e0d0;border-radius:2px;align-self:stretch;margin:0 6px; }
+  .map-shaft { width:36px;min-height:62px;background:#ececec;border-radius:6px;display:flex;align-items:center;justify-content:center; }
+  .map-shaft span { font-size:.55rem;color:#bbb;writing-mode:vertical-rl;text-orientation:mixed; }
+
   /* Stats family toggle */
   .stats-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .75rem; }
   .stats-header-label { font-size: .8rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: .05em; }
@@ -381,6 +407,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('rsvps')">RSVPs</button>
     <button class="tab-btn" onclick="switchTab('accommodation')">Accommodation</button>
+    <button class="tab-btn" onclick="switchTab('roommap')">Room Map</button>
   </div>
 
   <!-- Tab: RSVPs -->
@@ -396,10 +423,14 @@
     </div>
   </div>
   <div class="stats">
-    <div class="stat"><div class="stat-val" id="statTotal">—</div><div class="stat-label">Responses</div></div>
+    <div class="stat"><div class="stat-val" id="statTotal">—</div><div class="stat-label">Attending</div></div>
     <div class="stat"><div class="stat-val" id="statGuests">—</div><div class="stat-label">Total Guests</div></div>
     <div class="stat"><div class="stat-val" id="statHyd">—</div><div class="stat-label">Hyderabad</div></div>
     <div class="stat"><div class="stat-val" id="statChe">—</div><div class="stat-label">Chennai</div></div>
+    <div class="stat" style="border-left:3px solid #e0574f">
+      <div class="stat-val" id="statCannot" style="color:#e0574f">—</div>
+      <div class="stat-label">Cannot Attend</div>
+    </div>
   </div>
 
   <!-- Filters -->
@@ -536,6 +567,43 @@
     <div id="hotelTabContent"></div>
   </div>
 
+  <!-- Tab: Room Map -->
+  <div class="tab-panel" id="tab-roommap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+      <div style="display:flex;gap:.5rem">
+        <button class="map-floor-btn active" id="mfbL1" onclick="showMapFloor('L1')">L1 · Lower Ground</button>
+        <button class="map-floor-btn" id="mfbL2" onclick="showMapFloor('L2')">L2 · Upper Ground</button>
+        <button class="map-floor-btn" id="mfbL3" onclick="showMapFloor('L3')">L3 · Ground</button>
+        <button class="map-floor-btn" id="mfbL4" onclick="showMapFloor('L4')">L4 · First Floor</button>
+      </div>
+      <div style="display:flex;gap:.75rem;align-items:center;font-size:.8rem;color:#888">
+        <span><span style="display:inline-block;width:12px;height:12px;background:#c8e6c9;border:1px solid #81c784;border-radius:3px;margin-right:4px"></span>Assigned</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#f5f5f5;border:1px solid #ddd;border-radius:3px;margin-right:4px"></span>Empty</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#fff9c4;border:1px solid #f9a825;border-radius:3px;margin-right:4px"></span>Partial</span>
+      </div>
+    </div>
+    <div id="roomMapContainer" style="overflow-x:auto;padding-bottom:1rem"></div>
+  </div>
+
+  <!-- Room Map Assignment Modal -->
+  <div class="modal-overlay" id="roomMapModal">
+    <div class="modal-box" style="max-width:420px">
+      <h2 id="rmModalTitle">Room 101</h2>
+      <p id="rmModalType" style="font-size:.82rem;color:#888;margin:-1rem 0 1rem"></p>
+      <div id="rmModalOccupants" style="margin-bottom:1rem"></div>
+      <div class="modal-field">
+        <label>Assign Room Group</label>
+        <select id="rmGroupSelect" style="width:100%">
+          <option value="">— None —</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-cancel" onclick="closeRoomMapModal()">Cancel</button>
+        <button class="modal-submit" id="rmSaveBtn" onclick="saveRoomMapAssignment()">Save</button>
+      </div>
+    </div>
+  </div>
+
 </div><!-- end dashboard -->
 
 <!-- Add RSVP Modal -->
@@ -657,7 +725,7 @@ async function loadRSVPs() {
     const roomRes = await fetch(SUPABASE_URL + '/rest/v1/room_groups?select=*&order=created_at.asc', {
       headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY }
     });
-    if (roomRes.ok) allRooms = await roomRes.json();
+    if (roomRes.ok) { allRooms = await roomRes.json(); if (document.getElementById('tab-roommap')?.classList.contains('active')) renderRoomMap(); }
   } catch(e) { /* room_groups table not set up yet */ }
 }
 document.getElementById('refreshBtn').onclick = loadRSVPs;
@@ -674,14 +742,17 @@ function setStatFamily(fam) {
 }
 
 function renderStats(rows) {
-  const filtered = statFamilyFilter ? rows.filter(r => r.family === statFamilyFilter) : rows;
-  const guests = filtered.reduce((s, r) => s + (+r.guests || 0), 0);
-  const hyd = filtered.filter(r => r.events === 'hyderabad' || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
-  const che = filtered.filter(r => r.events === 'chennai'   || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
-  document.getElementById('statTotal').textContent  = filtered.length;
+  const filtered   = statFamilyFilter ? rows.filter(r => r.family === statFamilyFilter) : rows;
+  const attending  = filtered.filter(r => !r.cannot_attend);
+  const cannot     = filtered.filter(r => r.cannot_attend);
+  const guests     = attending.reduce((s, r) => s + (+r.guests || 0), 0);
+  const hyd        = attending.filter(r => r.events === 'hyderabad' || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
+  const che        = attending.filter(r => r.events === 'chennai'   || r.events === 'both').reduce((s, r) => s + (+r.guests || 0), 0);
+  document.getElementById('statTotal').textContent  = attending.length;
   document.getElementById('statGuests').textContent = guests;
   document.getElementById('statHyd').textContent    = hyd;
   document.getElementById('statChe').textContent    = che;
+  document.getElementById('statCannot').textContent = cannot.length;
 }
 
 // --- Filters ---
@@ -985,6 +1056,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   if (name === 'accommodation') renderAccomTab();
+  if (name === 'roommap') renderRoomMap();
 }
 
 // --- Accommodation tab ---
@@ -1468,6 +1540,198 @@ function downloadCSV(filename, rows) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+// ============================================================
+// ROOM MAP
+// ============================================================
+const ROOM_TYPE_LABELS = {
+  L1: { 135:'Sea View+Garden',137:'Sea View+Garden',139:'Sea View+Garden',141:'Sea View+Garden',143:'Sea View+Garden',145:'Sea View+Garden',147:'Sea View+Garden',149:'Sea View+Garden',151:'Sea View+Garden',153:'Sea View+Garden',155:'Sea View+Garden',157:'Sea View+Garden',159:'Sea View+Garden',161:'Sea View+Garden',163:'Bay View Villa 1',165:'Bay View Villa 2',167:'Amara Grand Villa' },
+  L2: {},
+  L3: { 313:'No Balcony',315:'No Balcony',317:'No Balcony' },
+  L4: { 400:'Executive Suite',401:'Executive Suite',403:'Executive Suite',405:'Executive Suite',407:'Executive Suite',409:'Executive Suite',411:'Executive Suite',435:'Bay Suite',459:'Bay Suite',445:'Presidential Suite' }
+};
+
+// Floor layout definitions — each section renders as a block
+const FLOOR_LAYOUTS = {
+  L1: {
+    name: 'L1 · Lower Ground Floor',
+    sections: [
+      { label: 'Sea View with Private Garden', type:'double-row',
+        top:    [161,159,157,155,153,151,149],
+        bottom: [147,145,143,141,139,137,135]
+      },
+      { label: 'Villas', type:'single-row', rooms:[167,165,163] }
+    ]
+  },
+  L2: {
+    name: 'L2 · Upper Ground Floor',
+    sections: [
+      { label: 'Garden View ↔ Sea View', type:'double-row',
+        top:    [260,258,256,254,252,250,246,244,242,240,238,236,234],
+        bottom: [261,259,257,255,253,251,249,247,245,243,241,239,237,235]
+      }
+    ]
+  },
+  L3: {
+    name: 'L3 · Ground Floor',
+    sections: [
+      { label: 'Deluxe Rooms', type:'double-row',
+        top:    [314,316,318,320,322,324,326,328,330,332,334],
+        bottom: [313,315,317,319,321,323,325,327,329,331,333]
+      },
+      { label: 'Deluxe with Balcony / Bay View', type:'single-row', rooms:[345,343,341,339,337,335] }
+    ]
+  },
+  L4: {
+    name: 'L4 · First Floor',
+    sections: [
+      { label: 'Executive Suites', type:'single-row', rooms:[400,401,403,405,407,409,411] },
+      { label: 'Main Corridor', type:'double-row',
+        top:    [414,416,418,420,422,424,426,428,430,432,434],
+        bottom: [413,415,417,419,421,423,425,427,429,431,433]
+      },
+      { label: 'Sea View Rooms', type:'double-row',
+        top:    [460,462,464,466,468,470,472,474],
+        bottom: [459,463,465,467,469,471,473,475]
+      },
+      { label: 'Bay Suites & Waterbody View', type:'single-row', rooms:[435,437,439,441,443,445,447,449,451,453,455,457] }
+    ]
+  }
+};
+
+let activeMapFloor = 'L1';
+let rmModalRoomNum = null;
+
+function showMapFloor(floor) {
+  activeMapFloor = floor;
+  document.querySelectorAll('.map-floor-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mfb' + floor).classList.add('active');
+  renderRoomMap();
+}
+
+function renderRoomMap() {
+  const layout = FLOOR_LAYOUTS[activeMapFloor];
+  const typeLabels = ROOM_TYPE_LABELS[activeMapFloor] || {};
+  const container = document.getElementById('roomMapContainer');
+  if (!container) return;
+
+  let html = `<div style="font-size:.95rem;font-weight:700;color:#23150a;margin-bottom:1rem">${layout.name}</div>`;
+
+  for (const section of layout.sections) {
+    html += `<div class="map-section-label">${section.label}</div>`;
+    if (section.type === 'double-row') {
+      html += '<div class="map-corridor">';
+      const len = Math.max(section.top.length, (section.bottom||[]).length);
+      for (let i = 0; i < len; i++) {
+        html += '<div class="map-corridor-pair">';
+        if (section.top[i] != null)    html += roomCellHtml(section.top[i],    typeLabels[section.top[i]]);
+        if (section.bottom[i] != null) html += roomCellHtml(section.bottom[i], typeLabels[section.bottom[i]]);
+        html += '</div>';
+      }
+      html += '</div>';
+    } else {
+      html += '<div class="map-corridor">';
+      for (const rn of section.rooms) html += roomCellHtml(rn, typeLabels[rn]);
+      html += '</div>';
+    }
+  }
+  container.innerHTML = html;
+}
+
+function roomCellHtml(roomNum, typeLabel) {
+  const rn = String(roomNum);
+  const grp = allRooms.find(r => r.hotel === 'Sheraton' && String(r.room_number) === rn);
+  let cls = 'room-cell', nameHtml = '', guestHtml = '';
+
+  if (grp) {
+    const asgn = assignmentsOf(grp);
+    const total = Object.values(asgn).reduce((s,c)=>s+c,0);
+    const names = Object.keys(asgn).map(rid => {
+      const rv = allRows.find(r => r.id === +rid);
+      return rv ? rv.name.split(' ')[0] : '?';
+    }).filter(Boolean);
+    if (names.length) {
+      cls += ' assigned';
+      nameHtml = `<div class="room-cell-name">${names.join(', ')}</div>`;
+      guestHtml = `<div class="room-cell-guests">${total} guest${total!==1?'s':''}</div>`;
+    } else {
+      cls += ' partial'; // group exists but no guests yet
+      nameHtml = `<div class="room-cell-name" style="color:#aaa;font-style:italic">${grp.label}</div>`;
+    }
+  }
+
+  const isSpecial = typeLabel && (typeLabel.includes('Suite')||typeLabel.includes('Villa')||typeLabel.includes('Presidential'));
+  if (isSpecial && !grp) cls += ' special';
+
+  return `<div class="${cls}" onclick="openRoomMapModal(${roomNum})" title="${typeLabel||'Deluxe Room'}">
+    <div class="room-cell-num">${rn}</div>
+    ${nameHtml}
+    ${guestHtml}
+  </div>`;
+}
+
+function openRoomMapModal(roomNum) {
+  rmModalRoomNum = roomNum;
+  const rn = String(roomNum);
+  const grp = allRooms.find(r => r.hotel === 'Sheraton' && String(r.room_number) === rn);
+  const typeLabels = ROOM_TYPE_LABELS[activeMapFloor] || {};
+
+  document.getElementById('rmModalTitle').textContent = 'Room ' + rn;
+  document.getElementById('rmModalType').textContent = typeLabels[roomNum] || 'Deluxe Room';
+
+  // Build occupants section
+  let occHtml = '';
+  if (grp) {
+    const asgn = assignmentsOf(grp);
+    const entries = Object.entries(asgn).map(([rid,cnt])=>({rsvp:allRows.find(r=>r.id===+rid),cnt})).filter(e=>e.rsvp&&e.cnt>0);
+    if (entries.length) {
+      occHtml = '<div style="background:#f5f5f5;border-radius:8px;padding:.6rem .8rem;margin-bottom:.5rem">';
+      occHtml += entries.map(({rsvp:r,cnt})=>`<div style="display:flex;justify-content:space-between;font-size:.85rem;padding:.2rem 0"><span><strong>${esc(r.name)}</strong>${r.phone?` <span style="color:#888;font-size:.78rem">${esc(r.phone)}</span>`:''}</span><span style="color:#888">${cnt} guest${cnt!==1?'s':''}</span></div>`).join('');
+      occHtml += '</div>';
+    }
+  }
+  document.getElementById('rmModalOccupants').innerHTML = occHtml;
+
+  // Populate group dropdown — only unassigned Sheraton groups (no room_number yet, or this one)
+  const sel = document.getElementById('rmGroupSelect');
+  const sheratonGroups = allRooms.filter(r => r.hotel === 'Sheraton' && (!r.room_number || String(r.room_number) === rn));
+  sel.innerHTML = '<option value="">— None (clear assignment) —</option>' +
+    sheratonGroups.map(r => `<option value="${r.id}" ${grp && grp.id===r.id?'selected':''}>${esc(r.label)}${Object.keys(assignmentsOf(r)).length?' (has guests)':''}</option>`).join('');
+
+  document.getElementById('roomMapModal').classList.add('open');
+}
+
+function closeRoomMapModal() {
+  document.getElementById('roomMapModal').classList.remove('open');
+  rmModalRoomNum = null;
+}
+
+async function saveRoomMapAssignment() {
+  const rn = String(rmModalRoomNum);
+  const sel = document.getElementById('rmGroupSelect');
+  const newGroupId = sel.value ? parseInt(sel.value) : null;
+  const btn = document.getElementById('rmSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    // Clear this room number from whichever group currently has it
+    const prevGrp = allRooms.find(r => r.hotel === 'Sheraton' && String(r.room_number) === rn && (!newGroupId || r.id !== newGroupId));
+    if (prevGrp) {
+      await apiRoom('PATCH', '?id=eq.' + prevGrp.id, { room_number: null });
+      allRooms = allRooms.map(r => r.id === prevGrp.id ? {...r, room_number: null} : r);
+    }
+    // Assign new group to this room number
+    if (newGroupId) {
+      await apiRoom('PATCH', '?id=eq.' + newGroupId, { room_number: rn });
+      allRooms = allRooms.map(r => r.id === newGroupId ? {...r, room_number: rn} : r);
+    }
+    closeRoomMapModal();
+    renderRoomMap();
+  } catch(e) {
+    alert('Failed to save: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Save';
 }
 
 function exportRSVPs() {
